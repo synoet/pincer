@@ -3,7 +3,7 @@ import { Davinci } from './davinci';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	const davinci = new Davinci("");
+	const davinci = new Davinci("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");
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
@@ -17,9 +17,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const handleGetCompletions = async( text: string): Promise<Array<string>> => {
 		vscode.window.showInformationMessage("Reteiving Completions")
-		if(!text || text.length < 6) return [];
+		if(!text || text.length < 6) return [''];
 
-		return await davinci.complete(text);
+		vscode.window.showInformationMessage(text);
+
+
+		const completions = await davinci.complete(text);
+
+		vscode.window.showInformationMessage(completions.toString());
+
+		return completions;
 	}
 
 
@@ -29,22 +36,26 @@ export function activate(context: vscode.ExtensionContext) {
 				new vscode.Range(position.with(undefined, 0), position)
 			);
 
-			const suggestions = await handleGetCompletions(text);
+			const suggestions = [];
 
-			const items = suggestions.length ? suggestions.map((suggestion: string) => {
-				return {
-					text: suggestion,
-					range: new vscode.Range(position.translate(0, -1), position),
-				};
-			}): [];
+			const completions = await handleGetCompletions(text).catch(err => vscode.window.showErrorMessage(err.toString()));
 
-			return { items };
+			if (!completions) return [];
+
+			for (let i = 0; i < completions.length; i++) {
+				suggestions.push({
+				  text: text + completions[i],
+				  trackingId: `Completion ${i}`,
+				  range: new vscode.Range(position.with(undefined, 0), position)
+				});
+			  }
+		
+			  return suggestions as any;
 		},
 	};
 
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
 	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
-		console.log(e);
 	});
 }

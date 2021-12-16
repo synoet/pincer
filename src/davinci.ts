@@ -1,4 +1,6 @@
 import axios from 'axios';
+import * as vscode from "vscode";
+import * as https from 'https';
 
 export class Davinci {
     key: string = '';
@@ -16,12 +18,16 @@ export class Davinci {
         if (stop) this.stop = stop;
     }
 
-    async complete(text: string): Promise<Array<string>> {
+    async complete(text: string): Promise<Array<string>>{
+        const agent = new https.Agent({
+            rejectUnauthorized: false,
+          });
         const config = {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${this.key}`
-            }
+            },
+            httpsAgent: agent,
         }
 
 
@@ -31,9 +37,10 @@ export class Davinci {
             .then((res) => {
                 return res?.choices.map((choice: any) => choice.text);
             })
-            .catch((err) => console.log(err))
+            .catch((err) => vscode.window.showErrorMessage(err.toString()))
         
-        console.log(suggestions);
+        if (!suggestions) return [''];
+        vscode.window.showInformationMessage(suggestions[0])
         return suggestions as Array<string>;
 
     }
