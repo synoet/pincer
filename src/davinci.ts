@@ -2,12 +2,16 @@ import axios from 'axios';
 import * as vscode from "vscode";
 import * as https from 'https';
 
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 export class Davinci {
     key: string = '';
     topP: number = 1;
-    temp: number = 1;
-    maxTokens: number = 30;
-    stop: Array<string> = ["function"];
+    temp: number = 0.9;
+    maxTokens: number = 20;
+    bestOf: number = 0;
+    stop: Array<string> = ["\n"];
 
 
     constructor(key: string, topP?: number, temp?: number, maxTokens?: number, stop?: Array<string>) {
@@ -18,10 +22,11 @@ export class Davinci {
         if (stop) this.stop = stop;
     }
 
-    async complete(text: string): Promise<Array<string>>{
+    async complete(text: string, language: string): Promise<Array<string>>{
         const agent = new https.Agent({
             rejectUnauthorized: false,
           });
+
         const config = {
             headers: {
                 'Content-Type': 'application/json',
@@ -30,9 +35,17 @@ export class Davinci {
             httpsAgent: agent,
         }
 
+        text = `* Complete the following ${language} code: \n*/\n ${text}`;
 
-        const suggestions: string[] | void | undefined = await axios.post('https://api.openai.com/v1/engines/davinci/completions',
-        { prompt: text, max_tokens: this.maxTokens, temperature: this.temp,top_p: this.topP, n: 1, stream: false, stop: this.stop }, config)
+        const suggestions: string[] | void | undefined = await axios.post('https://api.openai.com/v1/engines/davinci/completions', { 
+            prompt: text, 
+            max_tokens: this.maxTokens,
+            temperature: this.temp,
+            top_p: this.topP,
+            n: 1,
+            stream: false,
+            stop: this.stop
+        }, config)
             .then((res: any) => res.data)
             .then((res) => {
                 return res?.choices.map((choice: any) => choice.text);
@@ -40,7 +53,6 @@ export class Davinci {
             .catch((err) => vscode.window.showErrorMessage(err.toString()))
         
         if (!suggestions) return [''];
-        vscode.window.showInformationMessage(suggestions[0])
         return suggestions as Array<string>;
 
     }

@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import { Davinci } from './davinci';
+import { StatusBar } from './status';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	const davinci = new Davinci("");
+	const davinci = new Davinci("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");
+	const statusBar = new StatusBar();
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
@@ -15,16 +17,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 
-	const handleGetCompletions = async( text: string): Promise<Array<string>> => {
-		vscode.window.showInformationMessage("Reteiving Completions")
-		if(!text || text.length < 6) return [''];
+	const handleGetCompletions = async( text: string, language: string): Promise<Array<string>> => {
+		if(!text || text.length < 5) return [''];
 
-		vscode.window.showInformationMessage(text);
-
-
-		const completions = await davinci.complete(text);
-
-		vscode.window.showInformationMessage(completions.toString());
+		const completions = await davinci.complete(text, language);
 
 		return completions;
 	}
@@ -36,11 +32,17 @@ export function activate(context: vscode.ExtensionContext) {
 				new vscode.Range(position.with(undefined, 0), position)
 			);
 
+			statusBar.showInProgress(document.languageId);
+
 			const suggestions = [];
 
-			const completions = await handleGetCompletions(text).catch(err => vscode.window.showErrorMessage(err.toString()));
+			const completions = await handleGetCompletions(text, document.languageId)
+			.catch(err => vscode.window.showErrorMessage(err.toString()));
 
-			if (!completions) return [];
+			if (!completions || !completions.length) {
+				statusBar.showEmpty(document.languageId);
+				return []
+			}
 
 			for (let i = 0; i < completions.length; i++) {
 				suggestions.push({
@@ -56,6 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
-	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
+	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {	
+		statusBar.showSuccess();
 	});
 }
