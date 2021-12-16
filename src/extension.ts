@@ -3,7 +3,7 @@ import { Davinci } from './davinci';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	const davinci = new Davinci("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");
+	const davinci = new Davinci("");
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
