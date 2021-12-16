@@ -4,8 +4,9 @@ import { StatusBar } from './status';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	const davinci = new Davinci("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");
+	const davinci = new Davinci("");
 	const statusBar = new StatusBar();
+	let timeout: any = null;
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
@@ -32,27 +33,35 @@ export function activate(context: vscode.ExtensionContext) {
 				new vscode.Range(position.with(undefined, 0), position)
 			);
 
-			statusBar.showInProgress(document.languageId);
+			let suggestions: any = [];
 
-			const suggestions = [];
+			// if user is typing we keep clearing previous timeouts
+			clearTimeout(timeout);
 
-			const completions = await handleGetCompletions(text, document.languageId)
-			.catch(err => vscode.window.showErrorMessage(err.toString()));
+			// wait until user stopped typing to run completion
+			timeout = setTimeout(async () => {
 
-			if (!completions || !completions.length) {
-				statusBar.showEmpty(document.languageId);
-				return []
-			}
+				statusBar.showInProgress(document.languageId);
 
-			for (let i = 0; i < completions.length; i++) {
-				suggestions.push({
-				  text: text + completions[i],
-				  trackingId: `Completion ${i}`,
-				  range: new vscode.Range(position.with(undefined, 0), position)
-				});
-			  }
-		
-			  return suggestions as any;
+				const completions = await handleGetCompletions(text, document.languageId)
+					.catch(err => vscode.window.showErrorMessage(err.toString()));
+
+				if (!completions || !completions.length) {
+					statusBar.showEmpty(document.languageId);
+					return []
+				}
+
+				for (let i = 0; i < completions.length; i++) {
+					suggestions.push({
+					text: text + completions[i],
+					trackingId: `Completion ${i}`,
+					range: new vscode.Range(position.with(undefined, 0), position)
+					});
+				}
+
+			}, 2000)
+
+			return suggestions as any;
 		},
 	};
 

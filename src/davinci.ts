@@ -54,7 +54,6 @@ export class Davinci {
         
         if (!suggestions) return [''];
         return suggestions as Array<string>;
-
     }
 
 }
