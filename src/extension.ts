@@ -3,7 +3,7 @@ import { Davinci } from './davinci';
 
 export function activate(context: vscode.ExtensionContext) {
 
-	const davinci = new Davinci();
+	const davinci = new Davinci("");
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const handleGetCompletions = async( text: string): Promise<Array<string>> => {
 		vscode.window.showInformationMessage("Reteiving Completions")
-		if(!text || text.length < 1) return [];
+		if(!text || text.length < 6) return [];
 
 		return await davinci.complete(text);
 	}
@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 				new vscode.Range(position.with(undefined, 0), position)
 			);
 
-			const suggestions = [ ... await handleGetCompletions(text) ];
+			const suggestions = await handleGetCompletions(text);
 
 			const items = suggestions.length ? suggestions.map((suggestion: string) => {
 				return {

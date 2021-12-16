@@ -2,8 +2,8 @@
 	"enabledApiProposals": [
 		"inlineCompletions"
 	],
-	"name": "Davinci",
-	"displayName": "Davinci",
+	"name": "davinci",
+	"displayName": "davinci",
 	"description": "A vscode completion extension using openai davinci engine",
 	"version": "0.0.1",
 	"publisher": "nysteo",

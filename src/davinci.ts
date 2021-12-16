@@ -1,25 +1,19 @@
 import axios from 'axios';
-import * as vscode from 'vscode';
-
 
 export class Davinci {
     key: string = '';
-    context: string = '';
-    temp: number = 0;
-    maxTokens: number = 0;
-    freqPen: number = 0;
-    presPen: number = 0;
-    stop: Array<string> = [];
+    topP: number = 1;
+    temp: number = 1;
+    maxTokens: number = 30;
+    stop: Array<string> = ["function"];
 
 
-    constructor(key: string, context: string, temp: number, maxTokens: number, freqPen: number, presPen: number, stop: Array<string>) {
+    constructor(key: string, topP?: number, temp?: number, maxTokens?: number, stop?: Array<string>) {
         this.key = key;
-        this.context = context;
-        this.temp = temp;
-        this.maxTokens = maxTokens;
-        this.freqPen = freqPen;
-        this.presPen = presPen;
-        this.stop = stop;
+        if (topP) this.topP = topP
+        if (temp) this.temp = temp;
+        if (maxTokens) this.maxTokens = maxTokens;
+        if (stop) this.stop = stop;
     }
 
     async complete(text: string): Promise<Array<string>> {
@@ -30,17 +24,16 @@ export class Davinci {
             }
         }
 
-        let suggestions: Array<string> = [];
 
-        await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions',
-        { prompt: text, max_tokens: this.maxTokens, temp: this.temp, stop: this.stop }, config)
-            .then((res: any) => res.json())
+        const suggestions: string[] | void | undefined = await axios.post('https://api.openai.com/v1/engines/davinci/completions',
+        { prompt: text, max_tokens: this.maxTokens, temperature: this.temp,top_p: this.topP, n: 1, stream: false, stop: this.stop }, config)
+            .then((res: any) => res.data)
             .then((res) => {
-                suggestions = res;
-                console.log(suggestions);
+                return res?.choices.map((choice: any) => choice.text);
             })
-            .catch((err) => vscode.window.showErrorMessage(err.toString()))
+            .catch((err) => console.log(err))
         
+        console.log(suggestions);
         return suggestions as Array<string>;
 
     }
