@@ -7,11 +7,11 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 export class Davinci {
     key: string = '';
-    topP: number = 0.3;
-    temp: number = 0.1;
-    maxTokens: number = 50;
+    topP: number = 1;
+    temp: number = .7;
+    maxTokens: number = 64;
     bestOf: number = 1;
-    stop: Array<string> = ["function"];
+    stop: Array<string> = ["line"];
 
 
     constructor(key: string, topP?: number, temp?: number, maxTokens?: number, stop?: Array<string>) {
