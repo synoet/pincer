@@ -7,11 +7,11 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 export class Davinci {
     key: string = '';
-    topP: number = 1;
-    temp: number = 0.9;
-    maxTokens: number = 20;
-    bestOf: number = 0;
-    stop: Array<string> = ["\n"];
+    topP: number = 0.3;
+    temp: number = 0.1;
+    maxTokens: number = 50;
+    bestOf: number = 1;
+    stop: Array<string> = ["function"];
 
 
     constructor(key: string, topP?: number, temp?: number, maxTokens?: number, stop?: Array<string>) {
@@ -35,9 +35,9 @@ export class Davinci {
             httpsAgent: agent,
         }
 
-        text = `* Complete the following ${language} code: \n*/\n ${text}`;
+        text = `* ${language}\n*/\n ${text}`;
 
-        const suggestions: string[] | void | undefined = await axios.post('https://api.openai.com/v1/engines/davinci/completions', { 
+        const suggestions: string[] | void | undefined = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', { 
             prompt: text, 
             max_tokens: this.maxTokens,
             temperature: this.temp,

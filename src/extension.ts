@@ -1,11 +1,9 @@
 import * as vscode from 'vscode';
 import { Davinci } from './davinci';
-import { StatusBar } from './status';
 
 export function activate(context: vscode.ExtensionContext) {
 
 	const davinci = new Davinci("");
-	const statusBar = new StatusBar();
 	let timeout: any = null;
 
 	const disposable = vscode.commands.registerCommand(
@@ -19,7 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	const handleGetCompletions = async( text: string, language: string): Promise<Array<string>> => {
-		if(!text || text.length < 5) return [''];
+		vscode.window.showInformationMessage("Reteiving Completions")
+		if(!text || text.length < 6) return [''];
 
 		const completions = await davinci.complete(text, language);
 
@@ -33,33 +32,22 @@ export function activate(context: vscode.ExtensionContext) {
 				new vscode.Range(position.with(undefined, 0), position)
 			);
 
+
 			let suggestions: any = [];
 
-			// if user is typing we keep clearing previous timeouts
-			clearTimeout(timeout);
 
-			// wait until user stopped typing to run completion
-			timeout = setTimeout(async () => {
+			const completions = await handleGetCompletions(text, document.languageId).catch(err => vscode.window.showErrorMessage(err.toString()));
 
-				statusBar.showInProgress(document.languageId);
+			if (!completions) return [];
 
-				const completions = await handleGetCompletions(text, document.languageId)
-					.catch(err => vscode.window.showErrorMessage(err.toString()));
+			for (let i = 0; i < completions.length; i++) {
+				suggestions.push({
+				text: text + completions[i],
+				trackingId: `Completion ${i}`,
+				range: new vscode.Range(position.with(undefined, 0), position)
+				});
+			}
 
-				if (!completions || !completions.length) {
-					statusBar.showEmpty(document.languageId);
-					return []
-				}
-
-				for (let i = 0; i < completions.length; i++) {
-					suggestions.push({
-					text: text + completions[i],
-					trackingId: `Completion ${i}`,
-					range: new vscode.Range(position.with(undefined, 0), position)
-					});
-				}
-
-			}, 2000)
 
 			return suggestions as any;
 		},
@@ -67,7 +55,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
-	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {	
-		statusBar.showSuccess();
+	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
 	});
 }
