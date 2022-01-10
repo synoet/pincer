@@ -4,7 +4,7 @@ import { Davinci } from './davinci';
 export function activate(context: vscode.ExtensionContext) {
 
 	const davinci = new Davinci("");
-	let timeout: any = null;
+	const davinciOutput = vscode.window.createOutputChannel("Davinci");
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
@@ -16,14 +16,13 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 
-	const handleGetCompletions = async( text: string, language: string): Promise<Array<string>> => {
-		vscode.window.showInformationMessage("Reteiving Completions")
-		if(!text || text.length < 6) return [''];
+	const handleGetCompletions = async( text: string, textContext: string, language: string): Promise<Array<string>> => {
+		vscode.window.showInformationMessage("Reteiving Completions");
 
-		const completions = await davinci.complete(text, language);
+		const completions = await davinci.complete(text, textContext, language);
 
 		return completions;
-	}
+	};
 
 
 	const provider: vscode.InlineCompletionItemProvider<vscode.InlineCompletionItem> = {
@@ -32,11 +31,25 @@ export function activate(context: vscode.ExtensionContext) {
 				new vscode.Range(position.with(undefined, 0), position)
 			);
 
+			let textContext = '';
+			
+			if (position.line > 1){
+				textContext = document.getText(
+					new vscode.Range(position.with(0, 0), position)
+				);
+			}
 
-			let suggestions: any = [];
 
+			davinciOutput.clear();
+			if (textContext != '') davinciOutput.appendLine("CONTEXT: \n" + textContext);
 
-			const completions = await handleGetCompletions(text, document.languageId).catch(err => vscode.window.showErrorMessage(err.toString()));
+			const suggestions: any = [];
+
+			const completions = await handleGetCompletions(
+				text,
+				textContext,
+				document.languageId
+				).catch(err => vscode.window.showErrorMessage(err.toString()));
 
 			if (!completions) return [];
 
@@ -56,5 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
 	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
+		davinciOutput.clear();
+		davinciOutput.appendLine("Gave Inline Reccomendation");
 	});
 }
