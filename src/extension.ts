@@ -6,6 +6,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const davinci = new Davinci("");
 	const davinciOutput = vscode.window.createOutputChannel("Davinci");
 
+	vscode.window.showInformationMessage("HELLO FROM DAVINCI");
+
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
 		() => {
