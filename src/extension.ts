@@ -1,12 +1,15 @@
 import * as vscode from 'vscode';
 import { Davinci } from './davinci';
+import {StatusBar} from './status';
+import {Clock} from './clock';
 
 export function activate(context: vscode.ExtensionContext) {
 
 	const davinci = new Davinci("");
-	const davinciOutput = vscode.window.createOutputChannel("Davinci");
+  const status = new StatusBar();
+  const clock = new Clock();
 
-	vscode.window.showInformationMessage("HELLO FROM DAVINCI");
+	const davinciOutput = vscode.window.createOutputChannel("Davinci");
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
@@ -17,9 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposable);
 
-
 	const handleGetCompletions = async( text: string, textContext: string, language: string): Promise<Array<string>> => {
-		vscode.window.showInformationMessage("Reteiving Completions");
+    status.showInProgress(language);
 
 		const completions = await davinci.complete(text, textContext, language);
 
@@ -29,6 +31,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const provider: vscode.InlineCompletionItemProvider<vscode.InlineCompletionItem> = {
 		provideInlineCompletionItems: async (document, position, context, token) => {
+      clock.clear();
+      clock.newTimer("timeFromKeystoke").startTimer();
+
 			const text = document.getText(
 				new vscode.Range(position.with(undefined, 0), position)
 			);
@@ -41,8 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
 				);
 			}
 
-
-			davinciOutput.clear();
 			if (textContext != '') davinciOutput.appendLine("CONTEXT: \n" + textContext);
 
 			const suggestions: any = [];
@@ -54,6 +57,8 @@ export function activate(context: vscode.ExtensionContext) {
 				).catch(err => vscode.window.showErrorMessage(err.toString()));
 
 			if (!completions) return [];
+
+      status.showSuccess();
 
 			for (let i = 0; i < completions.length; i++) {
 				suggestions.push({
@@ -71,7 +76,12 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
 	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
+    clock.endTimer("timeFromKeystoke");
 		davinciOutput.clear();
 		davinciOutput.appendLine("Gave Inline Reccomendation");
+    const report = clock.report();
+    for (let idx = 0; idx < report.length; idx++){
+      davinciOutput.appendLine(`${report[idx].name}: took ${report[idx].timeTaken} ms`);
+    }
 	});
 }
