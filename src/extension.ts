@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { Davinci } from './davinci';
-import {StatusBar} from './status';
-import {Clock} from './clock';
+import { Davinci } from './lib/davinci';
+import {StatusBar} from './lib/status';
+import {Clock} from './lib/clock';
 
 export function activate(context: vscode.ExtensionContext) {
 
