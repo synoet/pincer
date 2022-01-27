@@ -68,7 +68,6 @@ export function activate(context: vscode.ExtensionContext) {
 				});
 			}
 
-
 			return suggestions as any;
 		},
 	};
@@ -80,8 +79,5 @@ export function activate(context: vscode.ExtensionContext) {
 		davinciOutput.clear();
 		davinciOutput.appendLine("Gave Inline Reccomendation");
     const report = clock.report();
-    for (let idx = 0; idx < report.length; idx++){
-      davinciOutput.appendLine(`${report[idx].name}: took ${report[idx].timeTaken} ms`);
-    }
 	});
 }

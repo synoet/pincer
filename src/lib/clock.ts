@@ -4,7 +4,7 @@ interface Timer {
   endTime: Date;
 }
 
-interface TimerReport {
+export interface TimerReport {
   name: string;
   timeTaken: Date;
 }
