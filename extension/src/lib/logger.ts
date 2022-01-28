@@ -1,4 +1,5 @@
 import {TimerReport} from './clock';
+import axios from 'axios';
 
 interface CompletionLog {
   input: string;
@@ -31,7 +32,13 @@ export class Logger implements Logger {
   }
 
   sendLogs(): void{
-    // make request to server
+    if(!this.timerLogs || !this.completionLogs) return;
+
+    axios.post('http://localhost:8000/log', {
+      timeStamp: new Date,
+      completionLogs: this.completionLogs,
+      timerLogs: this.timerLogs,
+    }).catch((err) => console.log(err));
   }
 
   takeClockReport(report: Array<TimerReport>): void {

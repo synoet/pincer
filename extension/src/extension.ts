@@ -2,12 +2,17 @@ import * as vscode from 'vscode';
 import { Davinci } from './lib/davinci';
 import {StatusBar} from './lib/status';
 import {Clock} from './lib/clock';
+import {Logger} from './lib/logger';
 
 export function activate(context: vscode.ExtensionContext) {
-
-	const davinci = new Davinci("");
+	const davinci = new Davinci("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");
   const status = new StatusBar();
   const clock = new Clock();
+  const logger = new Logger();
+
+  let counter = 0;
+  
+  const sleep = (ms = 2000) => new Promise((r) => setTimeout(r, ms));
 
 	const davinciOutput = vscode.window.createOutputChannel("Davinci");
 
@@ -23,6 +28,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const handleGetCompletions = async( text: string, textContext: string, language: string): Promise<Array<string>> => {
     status.showInProgress(language);
 
+    davinciOutput.appendLine(textContext);
+
 		const completions = await davinci.complete(text, textContext, language);
 
 		return completions;
@@ -31,6 +38,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const provider: vscode.InlineCompletionItemProvider<vscode.InlineCompletionItem> = {
 		provideInlineCompletionItems: async (document, position, context, token) => {
+      counter++;
+      let localCounter = counter;
+      await sleep();
+
+      if (localCounter < counter) return;
+
+      logger.clear();
       clock.clear();
       clock.newTimer("timeFromKeystoke").startTimer();
 
@@ -49,14 +63,26 @@ export function activate(context: vscode.ExtensionContext) {
 			if (textContext != '') davinciOutput.appendLine("CONTEXT: \n" + textContext);
 
 			const suggestions: any = [];
+      let completions: any = [];
 
-			const completions = await handleGetCompletions(
-				text,
-				textContext,
-				document.languageId
-				).catch(err => vscode.window.showErrorMessage(err.toString()));
+      davinciOutput.appendLine("HIT");
 
-			if (!completions) return [];
+      completions = await handleGetCompletions(
+        text,
+        textContext,
+        document.languageId
+        ).catch(err => vscode.window.showErrorMessage(err.toString()));
+
+			if (!completions) {
+        return [];
+      }
+
+      logger.addCompletionLog({
+        input: text,
+        language: document.languageId,
+        suggestion: completions[0],
+        taken: false,
+      })
 
       status.showSuccess();
 
@@ -65,7 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
 				text: text + completions[i],
 				trackingId: `Completion ${i}`,
 				range: new vscode.Range(position.with(undefined, 0), position)
-				});
+				})
 			}
 
 			return suggestions as any;
@@ -76,8 +102,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
     clock.endTimer("timeFromKeystoke");
-		davinciOutput.clear();
 		davinciOutput.appendLine("Gave Inline Reccomendation");
-    const report = clock.report();
+    logger.takeClockReport(clock.report())
+    logger.sendLogs();
 	});
 }
