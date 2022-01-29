@@ -3,23 +3,20 @@ import * as uuid from 'uuid';
 
 const local = process.env.HOME;
 
-const getUser = (): string | void => {
-  let userId;
-  fs.readFile(`${local}/.davinci.conf`, 'utf-8', (err, data) => {
-    if (err) {
-      throw err;
-    };
-    if (data) {
-      userId = data;
-    }
+export const getUser = async (): Promise<string | void> => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(`${local}/.davinci.conf`, 'utf-8', (err, data) => {
+      if (err) {
+        reject(err);
+      };
+      if (data) {
+        resolve(data);
+      }
+    })
   })
-
-  if (!userId) return ;
-
-  return userId;
 }
 
-const createUser = async (): Promise<void> => {
+export const createUser = async (): Promise<void> => {
   const newId = uuid.v1();
 
   fs.writeFile(`${local}/.davinci.conf`, newId, (err: any) => {
@@ -30,4 +27,4 @@ const createUser = async (): Promise<void> => {
 
 }
 
-console.log(getUser());
+
