@@ -5,10 +5,12 @@ import {Clock} from './lib/clock';
 import {Logger} from './lib/logger';
 
 export function activate(context: vscode.ExtensionContext) {
-	const davinci = new Davinci("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");
+	const davinci = new Davinci("");
   const status = new StatusBar();
   const clock = new Clock();
   const logger = new Logger();
+
+  logger.initSession();
 
   let counter = 0;
   
@@ -35,7 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
 		return completions;
 	};
 
-
 	const provider: vscode.InlineCompletionItemProvider<vscode.InlineCompletionItem> = {
 		provideInlineCompletionItems: async (document, position, context, token) => {
       counter++;
@@ -54,11 +55,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 			let textContext = '';
 			
-			if (position.line > 1){
-				textContext = document.getText(
-					new vscode.Range(position.with(0, 0), position)
-				);
-			}
+      textContext = document.getText(
+        new vscode.Range(position.with(0, 0), position)
+      );
 
 			if (textContext != '') davinciOutput.appendLine("CONTEXT: \n" + textContext);
 
@@ -84,6 +83,8 @@ export function activate(context: vscode.ExtensionContext) {
         taken: false,
       })
 
+      logger.pingSession();
+
       status.showSuccess();
 
 			for (let i = 0; i < completions.length; i++) {
@@ -104,6 +105,6 @@ export function activate(context: vscode.ExtensionContext) {
     clock.endTimer("timeFromKeystoke");
 		davinciOutput.appendLine("Gave Inline Reccomendation");
     logger.takeClockReport(clock.report())
-    logger.sendLogs();
+    logger.sendSessionLogs();
 	});
 }

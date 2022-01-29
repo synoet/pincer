@@ -1,5 +1,6 @@
 import {TimerReport} from './clock';
 import axios from 'axios';
+import * as uuid from 'uuid';
 
 interface CompletionLog {
   input: string;
@@ -9,6 +10,7 @@ interface CompletionLog {
 }
 
 export interface Logger {
+  sessionId: String;
   timerLogs: Array<TimerReport>;
   completionLogs: Array<CompletionLog>;
 }
@@ -23,6 +25,11 @@ export class Logger implements Logger {
     this.contructor();
   }
 
+  initSession() {
+    this.sessionId = uuid.v4();
+    this.pingSession();
+  }
+
   generateLogReport() {
     return {
       logTimeStamp: new Date(),
@@ -31,10 +38,18 @@ export class Logger implements Logger {
     };
   }
 
-  sendLogs(): void{
+  pingSession(){
+    if (!this.sessionId) this.initSession();
+
+    axios.post('http://localhost:8000/ping', {sessionId: this.sessionId})
+      .catch((err) => console.log(err));
+  }
+
+  sendSessionLogs(): void{
     if(!this.timerLogs || !this.completionLogs) return;
 
-    axios.post('http://localhost:8000/log', {
+    axios.post('http://localhost:8000/logs', {
+      sessionId: this.sessionId,
       timeStamp: new Date,
       completionLogs: this.completionLogs,
       timerLogs: this.timerLogs,

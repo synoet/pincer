@@ -37,7 +37,7 @@ export class Davinci {
 
         text = `${textContext}`;
 
-        const suggestions: string[] | void | undefined = await axios.post('https://api.openai.com/v1/engines/davinci/completions', { 
+        const suggestions: string[] | void | undefined = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', { 
             prompt: text, 
             max_tokens: this.maxTokens,
             temperature: this.temp,
