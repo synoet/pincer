@@ -4,11 +4,15 @@ import {StatusBar} from './lib/status';
 import {Clock} from './lib/clock';
 import {Logger} from './lib/logger';
 
+require('dotenv').config();
+
 export function activate(context: vscode.ExtensionContext) {
-	const davinci = new Davinci("");
+  const openaiKey = process.env.OPENAI_KEY;
+	const davinci = new Davinci(openaiKey || "");
   const status = new StatusBar();
   const clock = new Clock();
   const logger = new Logger();
+
 
   logger.initSession();
 
