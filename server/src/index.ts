@@ -98,6 +98,41 @@ app.post(
   }
 )
 
+app.get(
+  "/session/user/:userId",
+  async (req: Request, res: Response): Promise<any> => {
+    if (!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
+
+    const {userId} = req.params;
+
+    const users = dbConnection.collection("users");
+    const sessions = dbConnection.collection("sessions");
+
+    const [user] = await users
+                  .find({userId: userId})
+                  .toArray();
+
+    const userSessionIds = user?.sessions;
+
+    if (!userSessionIds || userSessionIds.length == 0) 
+      return res.status(400).send({message: "User has no sessions"});
+
+    let userSessions: any = [];
+
+    await Promise.all(
+      userSessionIds.map(async (sessionId: string) => {
+        let [ session ] = await sessions
+                        .find({sessionId: sessionId})
+                        .toArray();
+        userSessions.push(session);
+      })
+    )
+
+    res.json(userSessions);
+  }
+)
+
+
 // ping a session to keep it alive
 app.post(
   "/session/ping",
