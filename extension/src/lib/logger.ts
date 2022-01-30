@@ -1,5 +1,6 @@
 import {TimerReport} from './clock';
 import axios from 'axios';
+import {getUser, createUser} from './user';
 import * as uuid from 'uuid';
 
 interface CompletionLog {
@@ -10,6 +11,7 @@ interface CompletionLog {
 }
 
 export interface Logger {
+  userId: String;
   sessionId: String;
   timerLogs: Array<TimerReport>;
   completionLogs: Array<CompletionLog>;
@@ -25,9 +27,34 @@ export class Logger implements Logger {
     this.contructor();
   }
 
-  initSession() {
+  private async debug(value: any){
+    await axios.post('http://localhost:8000/debug', {
+      value: value,
+    });
+  }
+
+  async initSession() {
+    let userId = await getUser() || "";
+
+    // If no user Id we create it and create on server
+    if (!userId) {
+      userId = await createUser();
+
+      await axios.post('http://localhost:8000/user/create', {
+        userId: userId,
+      })
+      .catch((err) => console.log(err));
+    }
+
+    this.userId = userId;
+
     this.sessionId = uuid.v4();
-    this.pingSession();
+    await this.pingSession();
+
+    await axios.post('http://localhost:8000/user/session', {
+      userId: userId,
+      sessionId: this.sessionId,
+    }).catch((err: any) => console.log(err));
   }
 
   generateLogReport() {
@@ -38,10 +65,10 @@ export class Logger implements Logger {
     };
   }
 
-  pingSession(){
+  async pingSession(){
     if (!this.sessionId) this.initSession();
 
-    axios.post('http://localhost:8000/ping', {sessionId: this.sessionId})
+    await axios.post('http://localhost:8000/ping', {sessionId: this.sessionId})
       .catch((err) => console.log(err));
   }
 

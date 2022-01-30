@@ -16,14 +16,14 @@ export const getUser = async (): Promise<string | void> => {
   })
 }
 
-export const createUser = async (): Promise<void> => {
+export const createUser = async (): Promise<string> => {
   const newId = uuid.v1();
 
   fs.writeFile(`${local}/.davinci.conf`, newId, (err: any) => {
     if (err) console.log(err);
-
-    return {userId: newId}
   })
+
+  return newId;
 
 }
 

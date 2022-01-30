@@ -6,13 +6,14 @@ import {Logger} from './lib/logger';
 
 require('dotenv').config();
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+	const davinciOutput = vscode.window.createOutputChannel("Davinci");
+
   const openaiKey = process.env.OPENAI_KEY;
 	const davinci = new Davinci(openaiKey || "");
   const status = new StatusBar();
   const clock = new Clock();
   const logger = new Logger();
-
 
   logger.initSession();
 
@@ -20,7 +21,6 @@ export function activate(context: vscode.ExtensionContext) {
   
   const sleep = (ms = 2000) => new Promise((r) => setTimeout(r, ms));
 
-	const davinciOutput = vscode.window.createOutputChannel("Davinci");
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',

@@ -30,6 +30,18 @@ app.get(
 );
 
 app.post(
+  "/debug",
+  async(req: Request, res: Response): Promise<Response> => {
+    console.log("DEBUG: \n  ", req.body);
+
+    return res.status(200).send({
+      message: "debug printed",
+    });
+
+  }
+)
+
+app.post(
   "/logs",
   async (req: Request, res: Response): Promise<Response> => {
     console.log(req.body);
@@ -88,17 +100,19 @@ app.post(
 )
 
 app.post(
-  "/user",
+  "/user/create",
   async (req: Request, res: Response): Promise<any> => {
+    console.log("/user/create", req.body);
+
     const {userId} = req.body;
 
     if(!dbConnection) res.status(400).send({message: "Not connected to db"});
 
     if(!userId) res.status(400).send({message: "No UserId in request"});
 
-    const users = dbConnection.collection("users");
+    const users = await dbConnection.collection("users");
 
-    users
+    await users
       .insertOne({
         userId: userId,
         sessions: [],
@@ -109,6 +123,34 @@ app.post(
       } 
     })
 
+  }
+)
+
+app.post(
+  "/user/session",
+  async (req: Request, res: Response): Promise<any> => {
+    console.log("/user/session invoked \n");
+    const {userId, sessionId} = req.body;
+
+    if (!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
+
+    const users = dbConnection.collection("users");
+
+    const user = await users.find({userId: userId}).limit(1).toArray();
+
+    console.log("user", user[0]);
+
+    if (!user[0]) return;
+
+    users
+      .updateOne({userId: userId}, {
+        $set: {
+          userId: userId,
+          sessions: user[0].sessions.length > 0 ? [... user[0].sessions, sessionId] : [sessionId],
+        }
+      }, (err: any) => {
+          console.log(err);
+      });
   }
 )
 
