@@ -68,7 +68,7 @@ export class Logger implements Logger {
   async pingSession(){
     if (!this.sessionId) this.initSession();
 
-    await axios.post('http://localhost:8000/ping', {sessionId: this.sessionId})
+    await axios.post('http://localhost:8000/session/ping', {sessionId: this.sessionId})
       .catch((err) => console.log(err));
   }
 

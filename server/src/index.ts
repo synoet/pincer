@@ -100,7 +100,7 @@ app.post(
 
 // ping a session to keep it alive
 app.post(
-  "/ping",
+  "/session/ping",
   async (req: Request, res: Response): Promise<Response> => {
 
     const {sessionId} = req.body;
@@ -164,6 +164,7 @@ app.post(
 
   }
 )
+
 
 app.post(
   "/user/session",
