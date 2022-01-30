@@ -29,22 +29,60 @@ app.get(
 	}
 );
 
+// Print something cause vscode -> trash
 app.post(
   "/debug",
   async(req: Request, res: Response): Promise<Response> => {
-    console.log("DEBUG: \n  ", req.body);
-
+    console.log("/debug: \n", req.body, "\n")
     return res.status(200).send({
       message: "debug printed",
     });
+  }
+)
 
+
+app.get(
+  "/logs",
+  async (req: Request, res: Response): Promise<any> => {
+    if (!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
+
+    dbConnection
+      .collection("logs")
+      .find({})
+      .limit(100)
+      .toArray((err: any, result: any) => {
+        if (err) console.log(err);
+        res.json(result);
+      })
+  }
+)
+
+// get logs by sessionId,
+app.get(
+  "/logs/session/:sessionId",
+  async (req: Request, res: Response): Promise<any> => {
+    if (!dbConnection) return res.status(500).send({message: "Failed to Connect to DB"});
+
+    const {sessionId} = req.params;
+
+    const logs = dbConnection.collection("logs");
+
+    logs
+      .find({sessionId: sessionId})
+      .limit(100)
+      .toArray((err: any, result: any) => {
+        if(err) console.log(err);     
+        res.json(result);
+      });
+
+    return res.status(200);
   }
 )
 
 app.post(
   "/logs",
   async (req: Request, res: Response): Promise<Response> => {
-    console.log(req.body);
+    console.log("/logs", req.body);
 
     if(!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
 
@@ -60,6 +98,7 @@ app.post(
   }
 )
 
+// ping a session to keep it alive
 app.post(
   "/ping",
   async (req: Request, res: Response): Promise<Response> => {
@@ -151,22 +190,6 @@ app.post(
       }, (err: any) => {
           console.log(err);
       });
-  }
-)
-
-app.get(
-  "/logs",
-  async (req: Request, res: Response): Promise<any> => {
-    if (!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
-
-    dbConnection
-      .collection("logs")
-      .find({})
-      .limit(100)
-      .toArray((err: any, result: any) => {
-        if (err) console.log(err);
-        res.json(result);
-      })
   }
 )
 
