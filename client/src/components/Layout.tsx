@@ -7,11 +7,9 @@ type LayoutProps = {
 
 export default function Layout({children}: LayoutProps) {
   return (
-    <div className="w-screen flex flex-col items-center justify-center gap-8">
+    <div className="w-screen flex flex-col items-center justify-center">
       <Header />
-      <div className="w-7/12">
-        {children}
-      </div>
+      {children}
     </div>
   )
 }

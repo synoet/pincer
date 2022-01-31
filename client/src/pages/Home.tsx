@@ -18,8 +18,8 @@ export default function Home() {
   }, []);
   return (
     <Layout>
-      <div className="w-full flex flex-col gap-8">
-        <h2 className="text-2xl text-indigo-700">Recent Sessions </h2>
+      <div className="w-7/12 flex flex-col gap-8">
+        <h2 className="text-2xl text-indigo-700 mt-10">Recent Sessions </h2>
         <div className="grid grid-cols-2 gap-4">
           {sessions && sessions.map((session: any, index: number) => (
             <SessionItem {...session} />

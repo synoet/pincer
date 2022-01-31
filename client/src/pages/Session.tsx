@@ -1,0 +1,68 @@
+import React, {useEffect, useState} from 'react';
+import { FcSms, FcElectricalThreshold, FcClock} from 'react-icons/fc';
+
+import {useLocation} from 'react-router-dom';
+import axios from 'axios';
+
+import Layout from '../components/Layout';
+import LogItem from '../components/LogItem';
+
+export default function Session() {
+  const search = useLocation().search;
+  const id = new URLSearchParams(search).get('id');
+
+  const [logs, setLogs] = useState<any>(undefined);
+
+  const [mode, setMode] = useState<string>("logs");
+
+  useEffect(() => {
+    if (id){
+      axios.get(`http://localhost:8000/logs/session/${id}`)
+        .then((res) => {
+          if (res.data){
+            setLogs(res.data);
+          }
+        })
+    }
+  }, [id])
+
+  return (
+    <Layout>
+      <div className='w-full flex justify-center bg-slate-100 border-b border-slate-200'>
+        <div className="w-7/12 flex flex-col pt-8 gap-2">
+          <div className="flex gap-1 items-center text-2xl">
+            <FcElectricalThreshold />
+            <h1> Session <span className="text-indigo-600">[{id}]</span></h1>
+          </div>
+          <div className="w-full flex items-center gap-4 text-slate-800 text-md">
+            <div className="flex gap-1 items-center">
+              <FcClock />
+              <p>Length: 10 min</p>
+            </div>
+            <div className="flex gap-1 items-center">
+              <FcSms />
+              <p>Logs: 100 </p>
+            </div>
+          </div>
+          <div className="w-full flex items-center gap-4 mt-8">
+            <div className="flex gap-1 items-center border-b-2 border-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
+              <p> Logs </p>
+            </div>
+            <div className="flex gap-1 items-center hover:border-b-2 border-slate-300 text-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
+              <p> Details </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className='w-7/12 flex mt-8 flex-col items-center gap-5'>
+        {logs && logs.map((log: any, index: number) => (
+          <LogItem 
+            id={log['_id']}
+            {...log}
+          />
+  
+        ))}
+      </div>
+    </Layout>
+  )
+} 

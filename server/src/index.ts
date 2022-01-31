@@ -75,7 +75,6 @@ app.get(
         res.json(result);
       });
 
-    return res.status(200);
   }
 )
 
