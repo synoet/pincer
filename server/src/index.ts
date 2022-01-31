@@ -189,6 +189,23 @@ app.post(
   }
 )
 
+app.get(
+  "/user",
+  async (req: Request, res: Response): Promise<any> => {
+    if(!dbConnection) res.status(500).send({message: "Not connected to db"});
+
+    const users = dbConnection.collection("users");
+
+
+    await users
+      .find({})
+      .limit(100)
+      .toArray((err: any, result: any) => {
+        res.json(result);
+      });
+  }
+)
+
 app.post(
   "/user/create",
   async (req: Request, res: Response): Promise<any> => {
