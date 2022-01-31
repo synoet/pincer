@@ -99,6 +99,23 @@ app.post(
 )
 
 app.get(
+  "/session",
+  async (req: Request, res: Response): Promise<any> => {
+    if (!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
+
+    const sessions = dbConnection.collection("sessions");
+
+    sessions
+      .find({})
+      .limit(12)
+      .toArray((err: any, result: any) => {
+        if (err) console.log(err);
+        res.json(result);
+      })
+  }
+)
+
+app.get(
   "/session/user/:userId",
   async (req: Request, res: Response): Promise<any> => {
     if (!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
