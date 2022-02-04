@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import { FcSms, FcElectricalThreshold, FcClock} from 'react-icons/fc';
+import { FcSms, FcElectricalThreshold, FcClock, FcUndo} from 'react-icons/fc';
+import {useHistory} from 'react-router-dom';
 
 import {useLocation} from 'react-router-dom';
 import axios from 'axios';
@@ -9,6 +10,7 @@ import LogItem from '../components/LogItem';
 
 export default function Session() {
   const search = useLocation().search;
+  const history = useHistory();
   const id = new URLSearchParams(search).get('id');
 
   const [logs, setLogs] = useState<any>(undefined);
@@ -29,7 +31,11 @@ export default function Session() {
   return (
     <Layout>
       <div className='w-full flex justify-center bg-slate-100 border-b border-slate-200'>
-        <div className="w-7/12 flex flex-col pt-8 gap-2">
+        <div className="w-7/12 flex flex-col pt-8 gap-3 cursor-pointer">
+          <div onClick={() => history.push("/")} className="flex gap-1 items-center text-md">
+            <FcUndo />
+            <p> Go Back </p>
+          </div>
           <div className="flex gap-1 items-center text-2xl">
             <FcElectricalThreshold />
             <h1> Session <span className="text-indigo-600">[{id}]</span></h1>
@@ -62,6 +68,11 @@ export default function Session() {
           />
   
         ))}
+        {logs && logs.length === 0 && (
+          <div className="w-full flex justify-center items-center p-12 border-2 border-dashed border-slate-400">
+            <h1 className='text-2xl text-slate-500'> No Logs in this Session </h1>
+          </div>
+        )}
       </div>
     </Layout>
   )
