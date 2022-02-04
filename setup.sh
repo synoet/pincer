@@ -19,6 +19,6 @@ do
 done
 echo
 
-code-insiders
+code-insiders --enable-proposed-api nysteo.davinci
 
 

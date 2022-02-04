@@ -9,13 +9,12 @@ require('dotenv').config();
 export async function activate(context: vscode.ExtensionContext) {
 	const davinciOutput = vscode.window.createOutputChannel("Davinci");
 
-  const openaiKey = process.env.OPENAI_KEY;
-	const davinci = new Davinci(openaiKey || "");
+	const davinci = new Davinci("");
   const status = new StatusBar();
-  const clock = new Clock();
-  const logger = new Logger();
+  //const clock = new Clock();
+  //const logger = new Logger();
 
-  logger.initSession();
+  //logger.initSession();
 
   let counter = 0;
   
@@ -49,9 +48,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
       if (localCounter < counter) return;
 
-      logger.clear();
-      clock.clear();
-      clock.newTimer("timeFromKeystoke").startTimer();
+      //logger.clear();
+      //clock.clear();
+      //clock.newTimer("timeFromKeystoke").startTimer();
 
 			const text = document.getText(
 				new vscode.Range(position.with(undefined, 0), position)
@@ -80,14 +79,14 @@ export async function activate(context: vscode.ExtensionContext) {
         return [];
       }
 
-      logger.addCompletionLog({
-        input: text,
-        language: document.languageId,
-        suggestion: completions[0],
-        taken: false,
-      })
+      // logger.addCompletionLog({
+      //   input: text,
+      //   language: document.languageId,
+      //   suggestion: completions[0],
+      //   taken: false,
+      // })
 
-      logger.pingSession();
+      // logger.pingSession();
 
       status.showSuccess();
 
@@ -106,9 +105,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
 	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
-    clock.endTimer("timeFromKeystoke");
+    // clock.endTimer("timeFromKeystoke");
 		davinciOutput.appendLine("Gave Inline Reccomendation");
-    logger.takeClockReport(clock.report())
-    logger.sendSessionLogs();
+    // logger.takeClockReport(clock.report())
+    // logger.sendSessionLogs();
 	});
 }
