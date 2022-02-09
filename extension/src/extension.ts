@@ -3,22 +3,22 @@ import { Davinci } from './lib/davinci';
 import {StatusBar} from './lib/status';
 import {Clock} from './lib/clock';
 import {Logger} from './lib/logger';
+import axios from 'axios';
 
 require('dotenv').config();
 
 export async function activate(context: vscode.ExtensionContext) {
 	const davinciOutput = vscode.window.createOutputChannel("Davinci");
 
-	const davinci = new Davinci("");
   const status = new StatusBar();
-  //const clock = new Clock();
-  //const logger = new Logger();
+  const clock = new Clock();
+  const logger = new Logger();
 
-  //logger.initSession();
+  logger.initSession();
 
   let counter = 0;
   
-  const sleep = (ms = 2000) => new Promise((r) => setTimeout(r, ms));
+  const sleep = (ms = 2500) => new Promise((r) => setTimeout(r, ms));
 
 
 	const disposable = vscode.commands.registerCommand(
@@ -35,7 +35,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
     davinciOutput.appendLine(textContext);
 
-		const completions = await davinci.complete(text, textContext, language);
+    const completions = await axios.post('http://localhost:8000/complete', {
+      prompt: textContext,
+      language: language,
+    })
+    .then((res)=>res.data.suggestions)
+    .catch((err) => vscode.window.showErrorMessage(err.toString()));
+
+    await axios.post('http://localhost:8000/debug', {
+      completions: completions,
+    });
 
 		return completions;
 	};
@@ -48,9 +57,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
       if (localCounter < counter) return;
 
-      //logger.clear();
-      //clock.clear();
-      //clock.newTimer("timeFromKeystoke").startTimer();
+      logger.clear();
+      clock.clear();
+      clock.newTimer("timeFromKeystoke").startTimer();
 
 			const text = document.getText(
 				new vscode.Range(position.with(undefined, 0), position)
@@ -79,14 +88,14 @@ export async function activate(context: vscode.ExtensionContext) {
         return [];
       }
 
-      // logger.addCompletionLog({
-      //   input: text,
-      //   language: document.languageId,
-      //   suggestion: completions[0],
-      //   taken: false,
-      // })
+       logger.addCompletionLog({
+         input: text,
+         language: document.languageId,
+         suggestion: completions[0],
+         taken: false,
+      })
 
-      // logger.pingSession();
+      logger.pingSession();
 
       status.showSuccess();
 
