@@ -2,14 +2,19 @@ import express, { Application, Request, Response } from "express";
 import { MongoClient } from 'mongodb';
 import cors from 'cors';
 
+import {complete} from './lib/complete';
+
 require('dotenv').config();
 
 const uri = process.env.URL || "";
+const key = process.env.KEY || "";
 const app: Application = express();
 const port = 8000;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true } as any);
 
 let dbConnection: any;
+
+console.log(key);
 
 client.connect((err: any) => {
   dbConnection = client.db("DavinciLogs");
@@ -28,6 +33,20 @@ app.get(
 		});
 	}
 );
+
+app.post(
+  "/complete",
+  async (req: Request, res: Response): Promise<Response> => {
+    const {prompt, language} = req.body;
+    console.log(prompt, language);
+
+    const suggestions = await complete(prompt, language, key);
+
+    return res.status(200).json({
+      suggestions: suggestions,
+    })
+  }
+)
 
 // Print something cause vscode -> trash
 app.post(
