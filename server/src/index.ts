@@ -3,6 +3,7 @@ import { MongoClient } from 'mongodb';
 import cors from 'cors';
 
 import {complete} from './lib/complete';
+const winston = require('winston');
 
 require('dotenv').config();
 
@@ -22,6 +23,7 @@ client.connect((err: any) => {
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+app.use(winston);
 
 app.get(
 	"/",

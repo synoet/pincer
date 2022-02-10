@@ -35,7 +35,8 @@ export class Logger implements Logger {
   }
 
   async initSession() {
-    let userId = await getUser() || "";
+    let userId = await getUser();
+    console.log(userId);
 
     // If no user Id we create it and create on server
     if (!userId) {
