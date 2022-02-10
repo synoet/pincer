@@ -14,8 +14,6 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 let dbConnection: any;
 
-console.log(key);
-
 client.connect((err: any) => {
   dbConnection = client.db("DavinciLogs");
   if (err) console.log(err);
