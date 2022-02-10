@@ -8,8 +8,8 @@ require('dotenv').config();
 
 const uri = process.env.URL || "";
 const key = process.env.KEY || "";
+const port = process.env.PORT || 8000;
 const app: Application = express();
-const port = 8000;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true } as any);
 
 let dbConnection: any;
