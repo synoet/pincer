@@ -4,8 +4,7 @@ MAG='\033[0;35m'
 RESET='\033[0m'
 
 echo -e "${MAG} Installing Davinci Extension ... ${RESET}"
-cd extension
-code-insiders --install-extension davinci-0.0.1.vsix &> /dev/null
+code-insiders --install-extension davinci.vsix &> /dev/null
 
 for ((k = 0; k <= 20 ; k++))
 do
