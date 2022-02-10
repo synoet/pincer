@@ -1,4 +1,5 @@
 import {TimerReport} from './clock';
+import * as config from '../config';
 import axios from 'axios';
 import {getUser, createUser} from './user';
 import * as uuid from 'uuid';
@@ -28,7 +29,7 @@ export class Logger implements Logger {
   }
 
   private async debug(value: any){
-    await axios.post('http://localhost:8000/debug', {
+    await axios.post(`${config.SERVER_URI}/debug`, {
       value: value,
     });
   }
@@ -40,7 +41,7 @@ export class Logger implements Logger {
     if (!userId) {
       userId = await createUser();
 
-      await axios.post('http://localhost:8000/user/create', {
+      await axios.post(`${config.SERVER_URI}/user/create`, {
         userId: userId,
       })
       .catch((err) => console.log(err));
@@ -51,7 +52,7 @@ export class Logger implements Logger {
     this.sessionId = uuid.v4();
     await this.pingSession();
 
-    await axios.post('http://localhost:8000/user/session', {
+    await axios.post(`${config.SERVER_URI}/user/session`, {
       userId: userId,
       sessionId: this.sessionId,
     }).catch((err: any) => console.log(err));
@@ -68,14 +69,14 @@ export class Logger implements Logger {
   async pingSession(){
     if (!this.sessionId) this.initSession();
 
-    await axios.post('http://localhost:8000/session/ping', {sessionId: this.sessionId})
+    await axios.post(`${config.SERVER_URI}/session/ping`, {sessionId: this.sessionId})
       .catch((err) => console.log(err));
   }
 
   sendSessionLogs(): void{
     if(!this.timerLogs || !this.completionLogs) return;
 
-    axios.post('http://localhost:8000/logs', {
+    axios.post(`${config.SERVER_URI}/logs`, {
       sessionId: this.sessionId,
       timeStamp: new Date,
       completionLogs: this.completionLogs,

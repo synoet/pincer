@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Davinci } from './lib/davinci';
+import * as config from './config';
 import {StatusBar} from './lib/status';
 import {Clock} from './lib/clock';
 import {Logger} from './lib/logger';
@@ -35,14 +35,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     davinciOutput.appendLine(textContext);
 
-    const completions = await axios.post('http://localhost:8000/complete', {
+    const completions = await axios.post(`${config.SERVER_URI}/complete`, {
       prompt: textContext,
       language: language,
     })
     .then((res)=>res.data.suggestions)
     .catch((err) => vscode.window.showErrorMessage(err.toString()));
 
-    await axios.post('http://localhost:8000/debug', {
+    await axios.post(`${config.SERVER_URI}/debug`, {
       completions: completions,
     });
 
