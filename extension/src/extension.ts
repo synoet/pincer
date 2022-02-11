@@ -14,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const clock = new Clock();
   const logger = new Logger();
 
-  logger.initSession();
+  await logger.initSession();
 
   let counter = 0;
   

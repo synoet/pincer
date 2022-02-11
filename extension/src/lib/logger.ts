@@ -45,6 +45,11 @@ export class Logger implements Logger {
         userId: userId,
       })
       .catch((err) => console.log(err));
+      
+      this.debug(`created user with id: ${userId}`);
+    } else {
+      this.debug(`Found user with id: ${userId}`)
+
     }
 
     this.userId = userId;
