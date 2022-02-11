@@ -102,4 +102,11 @@ export class Logger implements Logger {
     this.completionLogs.push(log);
   }
 
+  setRecentLogAsTaken(): void {
+    let log = this.completionLogs.pop();
+    if (!log) return;
+    log.taken = true;
+    this.completionLogs.push(log);
+  }
+
 }

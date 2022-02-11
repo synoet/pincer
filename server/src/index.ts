@@ -196,7 +196,7 @@ app.post(
 
     sessions.updateOne({sessionId: sessionId}, {
       $set: {
-        ...session,
+        ...session[0],
         latestPing: new Date(),
       }
     }, (err: any) => {

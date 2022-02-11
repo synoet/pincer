@@ -17,6 +17,9 @@ export async function activate(context: vscode.ExtensionContext) {
   await logger.initSession();
   logger.debug('OUT');
 
+  const recentCompletions: any = [];
+  let currentDocument = '';
+
   let counter = 0;
   
   const sleep = (ms = 2500) => new Promise((r) => setTimeout(r, ms));
@@ -53,6 +56,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const provider: vscode.InlineCompletionItemProvider<vscode.InlineCompletionItem> = {
 		provideInlineCompletionItems: async (document, position, context, token) => {
+      currentDocument = document.getText(
+        new vscode.Range(position.with(0, 0), position)
+      );
+
       counter++;
       let localCounter = counter;
       await sleep();
@@ -90,6 +97,8 @@ export async function activate(context: vscode.ExtensionContext) {
         return [];
       }
 
+      recentCompletions.push(`${completions[0]}`);
+
        logger.addCompletionLog({
          input: text,
          language: document.languageId,
@@ -115,8 +124,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
-	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
+	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(async (e) => {
     clock.endTimer("timeFromKeystoke");
+    await sleep();
+    if(currentDocument.split('\n').join('').includes(recentCompletions.pop().split('\n').join(''))) {
+      logger.setRecentLogAsTaken();
+    }
 		davinciOutput.appendLine("Gave Inline Reccomendation");
     logger.takeClockReport(clock.report())
     logger.sendSessionLogs();
