@@ -28,7 +28,7 @@ export class Logger implements Logger {
     this.contructor();
   }
 
-  private async debug(value: any){
+  async debug(value: any){
     await axios.post(`${config.SERVER_URI}/debug`, {
       value: value,
     });
@@ -46,10 +46,9 @@ export class Logger implements Logger {
       })
       .catch((err) => console.log(err));
       
-      this.debug(`created user with id: ${userId}`);
+      await this.debug(`created user with id: ${userId}`);
     } else {
-      this.debug(`Found user with id: ${userId}`)
-
+      await this.debug(`Found user with id: ${userId}`)
     }
 
     this.userId = userId;
@@ -57,10 +56,14 @@ export class Logger implements Logger {
     this.sessionId = uuid.v4();
     await this.pingSession();
 
+    await this.debug('before');
+
     await axios.post(`${config.SERVER_URI}/user/session`, {
       userId: userId,
       sessionId: this.sessionId,
-    }).catch((err: any) => console.log(err));
+    }).catch(async (err: any) => await this.debug(`EXTENSION ERROR ${err}`));
+
+    await this.debug('FINISHED INITIALIZING SESSION');
   }
 
   generateLogReport() {

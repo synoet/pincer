@@ -264,19 +264,26 @@ app.post(
 
     const user = await users.find({userId: userId}).limit(1).toArray();
 
-    console.log("user", user[0]);
+    console.log("/user/session, user: ", user[0]);
+    console.log("user/session, sessions: ", user[0].sessions);
 
     if (!user[0]) return;
 
-    users
+    console.log('server before');
+
+    await users
       .updateOne({userId: userId}, {
         $set: {
           userId: userId,
           sessions: user[0].sessions.length > 0 ? [... user[0].sessions, sessionId] : [sessionId],
         }
-      }, (err: any) => {
-          console.log(err);
+      }, (err: any, res:any) => {
+          if(err) throw err 
+          if (res) console.log(res);
       });
+    console.log('after');
+
+    res.status(201).send({message: 'Success'});
   }
 )
 

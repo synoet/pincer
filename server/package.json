@@ -5,7 +5,7 @@
   "main": "./src/index.js",
   "scripts": {
     "start": "node ./dist/index.js",
-    "devevelop": "ts-node-dev ./src/index.ts",
+    "develop": "ts-node-dev ./src/index.ts",
     "tsc": "tsc",
     "postinstall": "npm run tsc",
     "test": "echo \"Error: no test specified\" && exit 1"

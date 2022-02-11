@@ -15,6 +15,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const logger = new Logger();
 
   await logger.initSession();
+  logger.debug('OUT');
 
   let counter = 0;
   
@@ -31,6 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	const handleGetCompletions = async( text: string, textContext: string, language: string): Promise<Array<string>> => {
+    await logger.debug("EXTENSION handleGetCompletions");
     status.showInProgress(language);
 
     davinciOutput.appendLine(textContext);
@@ -114,9 +116,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
 	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(e => {
-    // clock.endTimer("timeFromKeystoke");
+    clock.endTimer("timeFromKeystoke");
 		davinciOutput.appendLine("Gave Inline Reccomendation");
-    // logger.takeClockReport(clock.report())
-    // logger.sendSessionLogs();
+    logger.takeClockReport(clock.report())
+    logger.sendSessionLogs();
 	});
 }
