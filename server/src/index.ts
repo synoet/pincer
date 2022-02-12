@@ -125,6 +125,7 @@ app.get(
     sessions
       .find({})
       .limit(12)
+      .sort({latestPing: -1})
       .toArray((err: any, result: any) => {
         if (err) console.log(err);
         res.json(result);
