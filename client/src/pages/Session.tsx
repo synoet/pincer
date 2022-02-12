@@ -5,6 +5,7 @@ import {useHistory} from 'react-router-dom';
 import {useLocation} from 'react-router-dom';
 import axios from 'axios';
 
+import {serverurl} from '../config';
 import Layout from '../components/Layout';
 import LogItem from '../components/LogItem';
 
@@ -19,18 +20,19 @@ export default function Session() {
 
   useEffect(() => {
     if (id){
-      axios.get(`http://localhost:8000/logs/session/${id}`)
+      axios.get(`${serverurl}/logs/session/${id}`)
         .then((res) => {
+          console.log("SESSIOn", res.data);
           if (res.data){
             setLogs(res.data);
           }
         })
     }
-  }, [id])
+  }, [])
 
   return (
     <Layout>
-      <div className='w-full flex justify-center bg-slate-100 border-b border-slate-200'>
+      <div className='w-full flex justify-center bg-slate-800/50 border-b border-slate-700 text-slate-200'>
         <div className="w-7/12 flex flex-col pt-8 gap-3 cursor-pointer">
           <div onClick={() => history.push("/")} className="flex gap-1 items-center text-md">
             <FcUndo />
@@ -40,7 +42,7 @@ export default function Session() {
             <FcElectricalThreshold />
             <h1> Session <span className="text-indigo-600">[{id}]</span></h1>
           </div>
-          <div className="w-full flex items-center gap-4 text-slate-800 text-md">
+          <div className="w-full flex items-center gap-4 text-slate-200 text-md">
             <div className="flex gap-1 items-center">
               <FcClock />
               <p>Length: 10 min</p>

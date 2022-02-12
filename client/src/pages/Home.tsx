@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
+import {serverurl} from '../config';
 import Layout from '../components/Layout';
 import SessionItem from '../components/SessionItem';
 
@@ -8,7 +9,7 @@ export default function Home() {
   const [sessions, setSessions] = useState<any>(undefined);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/session')
+    axios.get(`${serverurl}/session`)
       .then((res) => {
         if (res.data) {
           setSessions(res.data);
@@ -16,6 +17,7 @@ export default function Home() {
       })
 
   }, []);
+
   return (
     <Layout>
       <div className="w-7/12 flex flex-col gap-8">
