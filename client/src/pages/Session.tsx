@@ -5,6 +5,7 @@ import {useHistory} from 'react-router-dom';
 import {useLocation} from 'react-router-dom';
 import axios from 'axios';
 
+import {getRelative} from '../utils/time';
 import {serverurl} from '../config';
 import Layout from '../components/Layout';
 import LogItem from '../components/LogItem';
@@ -15,6 +16,7 @@ export default function Session() {
   const id = new URLSearchParams(search).get('id');
 
   const [logs, setLogs] = useState<any>(undefined);
+  const [session, setSession] = useState<any>(undefined);
 
   const [mode, setMode] = useState<string>("logs");
 
@@ -22,46 +24,59 @@ export default function Session() {
     if (id){
       axios.get(`${serverurl}/logs/session/${id}`)
         .then((res) => {
-          console.log("SESSIOn", res.data);
           if (res.data){
             setLogs(res.data);
           }
         })
     }
-  }, [])
+  }, [id])
+
+  useEffect(() => {
+    if(id){
+      axios.get(`${serverurl}/session/${id}`)
+        .then((res) => {
+          if (res.data){
+            console.log("SESSION", res.data);
+            setSession(res.data.session);
+          }
+        })
+    }
+  }, [id])
 
   return (
     <Layout>
-      <div className='w-full flex justify-center bg-slate-800/50 border-b border-slate-700 text-slate-200'>
-        <div className="w-7/12 flex flex-col pt-8 gap-3 cursor-pointer">
-          <div onClick={() => history.push("/")} className="flex gap-1 items-center text-md">
-            <FcUndo />
-            <p> Go Back </p>
-          </div>
-          <div className="flex gap-1 items-center text-2xl">
-            <FcElectricalThreshold />
-            <h1> Session <span className="text-indigo-600">[{id}]</span></h1>
-          </div>
-          <div className="w-full flex items-center gap-4 text-slate-200 text-md">
-            <div className="flex gap-1 items-center">
-              <FcClock />
-              <p>Length: 10 min</p>
+      {session && logs && (
+        <div className='w-full flex justify-center bg-slate-800/50 border-b border-slate-700 text-slate-200'>
+          <div className="w-7/12 flex flex-col pt-8 gap-3 cursor-pointer">
+            <div onClick={() => history.push("/")} className="flex gap-1 items-center text-md">
+              <FcUndo />
+              <p> Go Back </p>
             </div>
-            <div className="flex gap-1 items-center">
-              <FcSms />
-              <p>Logs: 100 </p>
+            <div className="flex gap-1 items-center text-2xl">
+              <FcElectricalThreshold />
+              <h1> Session <span className="text-indigo-600">[{id}]</span></h1>
             </div>
-          </div>
-          <div className="w-full flex items-center gap-4 mt-8">
-            <div className="flex gap-1 items-center border-b-2 border-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
-              <p> Logs </p>
+            <div className="w-full flex items-center gap-4 text-slate-200 text-md">
+              <div className="flex gap-1 items-center">
+                <FcClock />
+                <p>Length: {getRelative(session?.startTime, session?.latestPing)} Minutes</p>
+              </div>
+              <div className="flex gap-1 items-center">
+                <FcSms />
+                <p>Logs: 100 </p>
+              </div>
             </div>
-            <div className="flex gap-1 items-center hover:border-b-2 border-slate-300 text-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
-              <p> Details </p>
+            <div className="w-full flex items-center gap-4 mt-8">
+              <div className="flex gap-1 items-center border-b-2 border-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
+                <p> Logs </p>
+              </div>
+              <div className="flex gap-1 items-center hover:border-b-2 border-slate-300 text-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
+                <p> Details </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       <div className='w-7/12 flex mt-8 flex-col items-center gap-5'>
         {logs && logs.map((log: any, index: number) => (
           <LogItem 

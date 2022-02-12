@@ -96,6 +96,27 @@ app.get(
   }
 )
 
+app.get(
+  "/session/:sessionId",
+  async (req: Request, res:Response): Promise<any> => {
+    if (!dbConnection) return res.status(500).send({message: "Failed to Connect to DB"});
+
+    const {sessionId} = req.params;
+    console.log("sessionId");
+
+    const sessions = dbConnection.collection("sessions");
+
+    const [session] = await sessions
+                      .find({sessionId: sessionId})
+                      .limit(1)
+                      .toArray();
+
+    if (!session) res.status(401).send({message: `No Session with Id ${sessionId}`})
+
+    res.status(200).json({session: session});
+  }
+);
+
 app.post(
   "/logs",
   async (req: Request, res: Response): Promise<Response> => {
