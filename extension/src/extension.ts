@@ -62,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
       counter++;
       let localCounter = counter;
-      await sleep(1500);
+      await sleep(750);
 
       if (localCounter < counter) return;
 
