@@ -47,7 +47,6 @@ app.post(
   }
 )
 
-// Print something cause vscode -> trash
 app.post(
   "/debug",
   async(req: Request, res: Response): Promise<Response> => {
@@ -72,6 +71,54 @@ app.get(
         if (err) console.log(err);
         res.json(result);
       })
+  }
+)
+
+app.post(
+  "/document",
+  async(req: Request, res: Response): Promise<any> => {
+    if (!dbConnection) return res.status(400).send({message: "Failed to Connect to DB"});
+
+    const {document, timeStamp, sessionId} = req.body;
+
+    dbConnection
+      .collection("documents")
+      .insertOne({
+        sessionId: sessionId,
+        document: document,
+        timeStamp: timeStamp
+      }, (err: any) => {
+        if(err){
+          res.status(500).send({message: "failed to add document"})
+          return;
+        }
+      })
+
+    res.status(201).send({message: "Success!"})
+  }
+)
+
+app.get(
+  "/document/:sessionId/last",
+  async (req: Request, res: Response): Promise<any> => {
+    const {sessionId} = req.params;
+    if (!dbConnection) return res.status(500).send({message: "Failed to connect to db"});
+
+    const documents = dbConnection.collection("documents");
+
+    const lastDocument = await documents
+      .find({sessionId: sessionId})
+      .sort({timeStamp: -1})
+      .limit(1)
+      .toArray();
+
+    console.log(lastDocument);
+
+    if (!lastDocument[0]) {
+      res.status(200).json(null);
+      return;
+    }
+    res.status(200).json(lastDocument[0]);
   }
 )
 
