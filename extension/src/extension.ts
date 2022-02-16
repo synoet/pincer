@@ -66,6 +66,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
       if (localCounter < counter) return;
 
+      if (!(await logger.getLastDocumentTime())){
+        await logger.pushDocumentLog({document: currentDocument, timeStamp: new Date()})
+      } else {
+        let currTime = new Date(), lastTime = new Date(await logger.getLastDocumentTime());
+        if( (Math.ceil(Math.abs(((currTime.getTime() - lastTime.getTime()) / 1000) / 60))) > 1) {
+          await logger.pushDocumentLog({document: currentDocument, timeStamp: new Date()});
+        }
+      }
+
       logger.clear();
       clock.clear();
       clock.newTimer("timeFromKeystoke").startTimer();

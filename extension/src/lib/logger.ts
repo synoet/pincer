@@ -11,21 +11,30 @@ interface CompletionLog {
   taken: boolean;
 }
 
+interface DocumentLog {
+  document: string,
+  sessionId?: string,
+  timeStamp: Date,
+}
+
 export interface Logger {
   userId: String;
   sessionId: String;
   timerLogs: Array<TimerReport>;
   completionLogs: Array<CompletionLog>;
+  documentLogs: Array<DocumentLog>;
 }
 
 export class Logger implements Logger {
   contructor(){
     this.timerLogs = [];
     this.completionLogs = [];
+    this.documentLogs = [];
   }
 
   clear(): void{
-    this.contructor();
+    this.timerLogs = [];
+    this.completionLogs = [];
   }
 
   async debug(value: any){
@@ -71,6 +80,7 @@ export class Logger implements Logger {
       logTimeStamp: new Date(),
       timerLogs: this.timerLogs,
       completionLogs: this.completionLogs,
+      documentLogs: this.documentLogs,
     };
   }
 
@@ -89,6 +99,7 @@ export class Logger implements Logger {
       timeStamp: new Date,
       completionLogs: this.completionLogs,
       timerLogs: this.timerLogs,
+      documentLogs: this.documentLogs,
     }).catch((err) => console.log(err));
   }
 
@@ -100,6 +111,28 @@ export class Logger implements Logger {
 
   addCompletionLog(log: CompletionLog): void {
     this.completionLogs.push(log);
+  }
+
+  async pushDocumentLog(log: DocumentLog): Promise<void> {
+    this.debug("pushed document log");
+    await axios.post(`${config.SERVER_URI}/document`, {
+      sessionId: this.sessionId,
+      ...log,
+    })
+    .catch((err: any) => {
+      this.debug(`ERROR: ${err}`);
+    })
+  }
+
+  async getLastDocumentTime(): Promise<any> {
+    const last = await axios.get(`${config.SERVER_URI}/document/${this.sessionId}/last`)
+                    .then((res) => res.data);
+
+    this.debug("LAST");
+    this.debug(last);
+    if (!last) return undefined;
+
+    return last.timeStamp;
   }
 
   setRecentLogAsTaken(): void {
