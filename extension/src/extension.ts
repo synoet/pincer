@@ -3,6 +3,7 @@ import * as config from './config';
 import {StatusBar} from './lib/status';
 import {Clock} from './lib/clock';
 import {Logger} from './lib/logger';
+import {ACTIVATED} from './config';
 import axios from 'axios';
 
 require('dotenv').config();
@@ -74,6 +75,8 @@ export async function activate(context: vscode.ExtensionContext) {
           await logger.pushDocumentLog({document: currentDocument, timeStamp: new Date()});
         }
       }
+
+      if (!ACTIVATED) return;
 
       logger.clear();
       clock.clear();

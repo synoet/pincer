@@ -2,6 +2,7 @@ import {TimerReport} from './clock';
 import * as config from '../config';
 import axios from 'axios';
 import {getUser, createUser} from './user';
+import {ACTIVATED} from '../config';
 import * as uuid from 'uuid';
 
 interface CompletionLog {
@@ -52,6 +53,7 @@ export class Logger implements Logger {
 
       await axios.post(`${config.SERVER_URI}/user/create`, {
         userId: userId,
+        activated: ACTIVATED,
       })
       .catch((err) => console.log(err));
       
@@ -69,6 +71,7 @@ export class Logger implements Logger {
 
     await axios.post(`${config.SERVER_URI}/user/session`, {
       userId: userId,
+      activated: ACTIVATED,
       sessionId: this.sessionId,
     }).catch(async (err: any) => await this.debug(`EXTENSION ERROR ${err}`));
 
