@@ -298,7 +298,7 @@ app.post(
   async (req: Request, res: Response): Promise<any> => {
     console.log("/user/create", req.body);
 
-    const {userId} = req.body;
+    const {userId, activated} = req.body;
 
     if(!dbConnection) res.status(400).send({message: "Not connected to db"});
 
@@ -309,6 +309,7 @@ app.post(
     await users
       .insertOne({
         userId: userId,
+        activated,
         sessions: [],
       }, (err: any) => {
       if (err) {
@@ -344,6 +345,7 @@ app.post(
       .updateOne({userId: userId}, {
         $set: {
           userId: userId,
+          activated: user[0].activated || true,
           sessions: user[0].sessions.length > 0 ? [... user[0].sessions, sessionId] : [sessionId],
         }
       }, (err: any, res:any) => {
