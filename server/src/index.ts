@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application, Request, Response, NextFunction} from "express";
 import { MongoClient } from 'mongodb';
 import cors from 'cors';
 
@@ -23,6 +23,12 @@ client.connect((err: any) => {
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req: Request, res: Response, next: NextFunction ) => {
+  if(!req) res.status(500).send({message: "Something went wrong"});
+  if(!dbConnection) res.status(500).send({message: "Failed to connect to the Databse"});
+  next();
+})
 
 app.get(
 	"/",
