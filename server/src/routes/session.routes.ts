@@ -34,4 +34,39 @@ export default (app: Router, dbClient: any) => {
         })
     }
   );
+
+  app.get(
+    "/session/user/:userId",
+    async (req: Request, res: Response) => {
+      const {userId} = req.params;
+
+      const users = dbClient.collection("users");
+      const sessions = dbClient.collection("sessions");
+
+      if(!users || !sessions) res.status(500).send();
+
+      const [user] = await users
+                    .find({userId: userId})
+                    .toArray();
+
+      const userSessionIds = user?.sessions;
+
+      if (!userSessionIds || userSessionIds.length == 0) 
+        return res.status(400).send({message: "User has no sessions"});
+
+      let userSessions: any = [];
+
+      await Promise.all(
+        userSessionIds.map(async (sessionId: string) => {
+          let [ session ] = await sessions
+                          .find({sessionId: sessionId})
+                          .toArray();
+          userSessions.push(session);
+        })
+      )
+
+      res.json(userSessions);
+    }
+  );
+
 }
