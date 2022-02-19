@@ -3,7 +3,6 @@ import { MongoClient } from 'mongodb';
 import cors from 'cors';
 
 import {complete} from './lib/complete';
-const winston = require('winston');
 
 require('dotenv').config();
 
@@ -11,7 +10,12 @@ const uri = process.env.URL || "";
 const key = process.env.KEY || "";
 const port = process.env.PORT;
 const app: Application = express();
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true } as any);
+
+const client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  } as any
+);
 
 let dbConnection: any;
 
@@ -28,7 +32,7 @@ app.use((req: Request, res: Response, next: NextFunction ) => {
   if(!req) res.status(500).send({message: "Something went wrong"});
   if(!dbConnection) res.status(500).send({message: "Failed to connect to the Databse"});
   next();
-})
+});
 
 app.get(
 	"/",
