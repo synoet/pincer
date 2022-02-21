@@ -5,7 +5,7 @@ export default (app: Router, dbClient: any) => {
     Create a new session for a user, with an id.
   */
   app.post(
-    "/session",
+    "/v2/session",
    async (req: Request, res: Response): Promise<any> => {
       const {userId, sessionId} = req.body;
 
@@ -35,7 +35,7 @@ export default (app: Router, dbClient: any) => {
     Get all recent sessions
   */
   app.get(
-    "/session",
+    "/v2/session",
     async (req: Request, res: Response) => {
       const sessions = dbClient.collection("sessions");
 
@@ -53,7 +53,7 @@ export default (app: Router, dbClient: any) => {
     Get session info by its id.
   */
   app.get(
-    "/session/:sessionId",
+    "/v2/session/:sessionId",
     async (req: Request, res: Response) => {
       const {sessionId} = req.params;
 
@@ -75,7 +75,7 @@ export default (app: Router, dbClient: any) => {
     Get a session by a user id
   */
   app.get(
-    "/session/user/:userId",
+    "/v2/session/user/:userId",
     async (req: Request, res: Response) => {
       const {userId} = req.params;
 
@@ -114,7 +114,7 @@ export default (app: Router, dbClient: any) => {
     Extension will ping a session to keep it alive
   */
   app.post(
-    "/session/ping",
+    "/v2/session/ping",
     async (req: Request, res: Response) => {
       const {sessionId} = req.body;
 
