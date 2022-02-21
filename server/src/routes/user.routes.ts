@@ -5,7 +5,7 @@ export default (app: Router, dbClient: any) => {
     get all users
   */
   app.get(
-    "/user",
+    "/v2/user",
     async (req: Request, res: Response): Promise<any> => {
       const users = dbClient.collection("users");
 
@@ -23,7 +23,7 @@ export default (app: Router, dbClient: any) => {
     Activated represents wether their extension is activated.
   */
   app.post(
-    "/user/create",
+    "/v2/user/create",
     async (req: Request, res: Response): Promise<any> => {
       const {userId, activated} = req.body;
 
@@ -47,7 +47,7 @@ export default (app: Router, dbClient: any) => {
     Add a new session to a user.
   */
   app.post(
-    "/user/session",
+    "/v2/user/session",
     async (req: Request, res: Response): Promise<any> => {
       const {userId, sessionId} = req.body;
       const users = dbClient.collection("users");
