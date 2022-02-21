@@ -7,12 +7,12 @@ export default (app: Router, dbClient: any) => {
   */
     
   app.post(
-    "/document",
+    "/v2/document",
     async(req: Request, res: Response) => {
       const {document, timeStamp, sessionId} = req.body;
       const documents = dbClient.collection("documents");
 
-      await document
+      await documents
         .insertOne({
           sessionId: sessionId,
           document: document,
@@ -32,7 +32,7 @@ export default (app: Router, dbClient: any) => {
     Get timestamp of last document
   */
   app.get(
-    "/document/:sessionId/last",
+    "/v2/document/:sessionId/last",
     async (req: Request, res: Response): Promise<any> => {
       const {sessionId} = req.params;
 
