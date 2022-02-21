@@ -8,7 +8,7 @@ export default (app: Router, dbClient: any) => {
     Powers extension code completion
   */
   app.post(
-    "/complete",
+    "/v2/complete",
     async (req: Request, res: Response) => {
       const {prompt, language} = req.body;
 
@@ -24,7 +24,7 @@ export default (app: Router, dbClient: any) => {
     TODO: create better debugging
   */
   app.post(
-    "/debug",
+    "/v2/debug",
     async(req: Request, res: Response) => {
       return res.status(200).send({
         message: "debug printed",
