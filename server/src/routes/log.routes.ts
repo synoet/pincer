@@ -5,7 +5,7 @@ export default (app: Router, dbClient: any) => {
     Create a new log
   */
   app.post(
-    "/logs",
+    "/v2/logs",
     async (req: Request, res: Response): Promise<Response> => {
       const logs = dbClient.collection("logs");
 
@@ -23,7 +23,7 @@ export default (app: Router, dbClient: any) => {
     Get all logs 
   */
   app.get(
-    "/logs",
+    "/v2/logs",
     async (req: Request, res: Response): Promise<any> => {
       const logs = dbClient.collection("logs");
 
@@ -41,7 +41,7 @@ export default (app: Router, dbClient: any) => {
     Get a logs by session sessionId
   */
   app.get(
-    "/logs/session/:sessionId",
+    "/v2/logs/session/:sessionId",
     async (req: Request, res: Response): Promise<any> => {
       const {sessionId} = req.params;
 
