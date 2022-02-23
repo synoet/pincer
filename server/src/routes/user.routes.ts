@@ -73,4 +73,25 @@ export default async (app: Router) => {
       res.status(201).send({message: 'Success'});
     }
   );    
+
+  /*
+    user statistics
+  */
+  app.get(
+    "/v2/users/stats",
+    async (req: Request, res: Response) => {
+      const users = dbClient.collection("users");
+
+      const allUsers = await users.find({}).toArray();
+
+      const activatedUsers = allUsers.filter((user: any) => user.activated);
+
+      res.status(200).send({
+        users: allUsers.length,
+        activatedUsers: activatedUsers.length,
+        unactivatedusers: allUsers.length - activatedUsers.length,
+        percentAvtivated: Math.ceil((activatedUsers.length / allUsers.length) * 100),
+      })
+    }
+  )
 }
