@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { getDbConnection } from '../db/connection.db';
+import { getDbClient } from '../db/client.db';
 
 
 export default async (app: Router) => {
-  const dbClient = await getDbConnection();
+  const dbClient = await getDbClient();
 
   /*
     Create a new session for a user, with an id.

@@ -6,7 +6,7 @@ const uri = process.env.URL || "";
 
 let dbClient: any;
 
-export const getDbConnection = async () => {
+export const getDbClient = async () => {
   if (dbClient) return dbClient;
 
   const client = new MongoClient(uri, {

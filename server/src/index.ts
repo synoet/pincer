@@ -9,8 +9,6 @@ import User from './routes/user.routes';
 
 require('dotenv').config();
 
-const uri = process.env.URL || "";
-const key = process.env.KEY || "";
 const port = process.env.PORT;
 const app: Application = express();
 
@@ -23,6 +21,9 @@ app.get('/', (req, res) => {
 })
 
 Session(app);
+Log(app);
+Document(app);
+User(app);
 
 
 try {

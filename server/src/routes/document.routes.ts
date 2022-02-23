@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
+import { getDbClient } from '../db/client.db';
 
-export default (app: Router, dbClient: any) => {
+export default async (app: Router) => {
+  const dbClient = await getDbClient();
 
   /*
     Create a new document
