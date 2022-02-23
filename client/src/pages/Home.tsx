@@ -26,6 +26,7 @@ export default function Home() {
     Legend
   );
 
+  const [chartRange, setChartRange] = useState<any>(undefined);
   const [sessionData, setSessionsData] = useState<any>(undefined);
   const [logsData, setLogsData] = useState<any>(undefined);
   const [usersData, setUsersData] = useState<any>(undefined);
@@ -56,8 +57,9 @@ export default function Home() {
       });
   }, []);
 
-  // session data for logs
+  // session  & log data for chart
   useEffect(() => {
+    let dateRange: any = [];
     axios.get(`${serverurl}/sessions`)
       .then((res) => {
         if (res.data) {
@@ -66,21 +68,33 @@ export default function Home() {
             return `${date.getMonth()}/${date.getDate()}`
           });
           dates = new Set(dates);
-          let dateRange = [...dates].sort((a, b) => parseInt(a.split('/')[1]) - parseInt(b.split('/')[1]));
+          dateRange = [...dates].sort((a, b) => parseInt(a.split('/')[1]) - parseInt(b.split('/')[1]));
 
-          let sessionValues = dateRange.map((date) => res.data.filter((session: any) => {
+          let sessionValues = dateRange.map((date: any) => res.data.filter((session: any) => {
             let sessionDate = new Date(session.startTime);
             if (`${sessionDate.getMonth()}/${sessionDate.getDate()}` === date){
               return session;
             }
           }).length);
-          setSessionsData({
-            dates: dateRange,
-            sessions: sessionValues,
-          })
+          setChartRange(dateRange);
+          setSessionsData(sessionValues)
+        }
+      })
+    axios.get(`${serverurl}/logs`)
+      .then((res) => {
+        if (res.data){
+          let logValues = dateRange.map((date: any) => res.data.filter((log: any) => {
+            let logDate = new Date(log.timeStamp);
+            if (`${logDate.getMonth()}/${logDate.getDate()}` === date){
+              return log;
+            }
+          }).length);
+          setLogsData(logValues);
         }
       })
   }, [])
+
+
 
   const Highlight = ({children}: any) => (
     <span className="text-yellow font-bold">
@@ -156,7 +170,7 @@ export default function Home() {
         </div>
         <h2 className="text-3xl text-transparent mt-10 font-bold bg-gradient-to-r from-yellow to-orange/70 bg-clip-text">Daily Usage</h2>
         <div className="text-white border-orange border-2 rounded-md p-4">
-        {sessionData && (
+        {sessionData && chartRange && logsData && (
           <Line
             options={{
                scales: {
@@ -174,12 +188,17 @@ export default function Home() {
                 }
             }}
             data = {{
-              labels: sessionData.dates,
+              labels: chartRange,
               datasets: [
                 {
                   label: "Sessions per day",
-                  data: sessionData.sessions.map((session: any) => session),
+                  data: sessionData,
                   borderColor: '#FFD173',
+                },
+                {
+                  label: "Suggestions per day",
+                  data: logsData,
+                  borderColor: '#ED9366',
                 }
               ]
             }}
