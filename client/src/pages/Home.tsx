@@ -65,14 +65,14 @@ export default function Home() {
         if (res.data) {
           let dates: any = res.data.map((session:any) => {
             let date = new Date(session.startTime);
-            return `${date.getMonth()}/${date.getDate()}`
+            return `${date.getMonth() + 1}/${date.getDate()}`
           });
           dates = new Set(dates);
           dateRange = [...dates].sort((a, b) => parseInt(a.split('/')[1]) - parseInt(b.split('/')[1]));
 
           let sessionValues = dateRange.map((date: any) => res.data.filter((session: any) => {
             let sessionDate = new Date(session.startTime);
-            if (`${sessionDate.getMonth()}/${sessionDate.getDate()}` === date){
+            if (`${sessionDate.getMonth() + 1}/${sessionDate.getDate()}` === date){
               return session;
             }
           }).length);
@@ -85,11 +85,22 @@ export default function Home() {
         if (res.data){
           let logValues = dateRange.map((date: any) => res.data.filter((log: any) => {
             let logDate = new Date(log.timeStamp);
-            if (`${logDate.getMonth()}/${logDate.getDate()}` === date){
+            if (`${logDate.getMonth() + 1}/${logDate.getDate()}` === date){
               return log;
             }
           }).length);
-          setLogsData(logValues);
+
+          let takenLogValues = dateRange.map((date: any) => res.data.filter((log:any) => log.completionLogs && log.completionLogs[0]?.taken).filter((log: any) => {
+            let logDate = new Date(log.timeStamp);
+            if (`${logDate.getMonth() + 1}/${logDate.getDate()}` === date){
+              return log;
+            }
+          }).length);
+
+          setLogsData({
+            logValues,
+            takenLogValues,
+          });
         }
       })
   }, [])
@@ -191,15 +202,21 @@ export default function Home() {
               labels: chartRange,
               datasets: [
                 {
-                  label: "Sessions per day",
+                  label: "Sessions",
                   data: sessionData,
                   borderColor: '#FFD173',
                 },
                 {
-                  label: "Suggestions per day",
-                  data: logsData,
+                  label: "Suggestions",
+                  data: logsData.logValues,
                   borderColor: '#ED9366',
+                },
+                {
+                  label: "Suggestions taken",
+                  data: logsData.takenLogValues,
+                  borderColor: '#87d96c',
                 }
+                
               ]
             }}
           />

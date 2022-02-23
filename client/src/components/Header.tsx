@@ -11,8 +11,7 @@ export default function Header(){
         <div
           onClick={() => history.push('/')}
           className="flex items-center text-slate-300 gap-2 text-2xl cursor-pointer">
-          <FcLinux />
-          <h1 className="font-bold"> Davinci </h1>
+          <h1 className="font-bold"> Pincer </h1>
         </div>
         <div className="flex items-center gap-8">
           <p
@@ -24,9 +23,9 @@ export default function Header(){
           <p 
             className="text-slate-300 hover:text-slate-200 cursor-pointer"
             onClick={() => history.push('/sessions')}> Sessions </p>
-          <p
+          <p 
             className="text-slate-300 hover:text-slate-200 cursor-pointer"
-            onClick={() => history.push('/visuals')}> Visuals </p>
+            onClick={() => history.push('/failures')}> Failures </p>
         </div>
       </div>
     </div>
