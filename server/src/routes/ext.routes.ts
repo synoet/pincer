@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
 import {complete} from '../lib/complete';
 
+import { Logger } from '../config/logger.config';
+
 const KEY = process.env.KEY || "";
 
-export default (app: Router, dbClient: any) => {
+export default (app: Router) => {
   /*
     Powers extension code completion
   */
@@ -26,9 +28,7 @@ export default (app: Router, dbClient: any) => {
   app.post(
     "/v2/debug",
     async(req: Request, res: Response) => {
-      return res.status(200).send({
-        message: "debug printed",
-      });
+      Logger.info(req.body);
     }
   );
 }

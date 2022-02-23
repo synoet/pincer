@@ -11,7 +11,7 @@ export default async (app: Router) => {
   */
   app.post(
     "/v2/session",
-   async (req: Request, res: Response): Promise<any> => {
+   async (req: Request, res: Response) => {
       const {userId, sessionId} = req.body;
 
       const users = dbClient.collection("users");
