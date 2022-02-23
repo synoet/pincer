@@ -1,7 +1,7 @@
 import express, { Application } from "express";
-import cors from 'cors';
 
-import {Logger, LoggerMiddleware } from './config/logger';
+import {Logger} from './config/logger.config';
+import ConfigureApp from './config/express.config';
 
 import BaseRoutes from './routes/base.routes';
 import SessionRoutes from './routes/session.routes';
@@ -14,19 +14,18 @@ require('dotenv').config();
 const port = process.env.PORT;
 const app: Application = express();
 
-app.use(express.json());
-app.use(cors());
-app.use(express.urlencoded({ extended: true }));
-app.use(LoggerMiddleware);
 
+// Any Express Configuration (Middleware)
+ConfigureApp(app);
 
+// All Routes
 BaseRoutes(app);
 SessionRoutes(app);
 LogRoutes(app);
 DocumentRoutes(app);
 UserRoutes(app);
 
-app.listen(port, (): void => {
+app.listen(port, () => {
   Logger.info(`Davinci Started on port ${port}`)
 });
 
