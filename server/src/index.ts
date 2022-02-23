@@ -1,7 +1,7 @@
-import express, { Application, Request, Response, NextFunction} from "express";
-import { MongoClient } from 'mongodb';
+import express, { Application } from "express";
 import cors from 'cors';
 
+import Logger from './logger';
 import Session from './routes/session.routes';
 import Log from './routes/log.routes';
 import Document from './routes/document.routes';
@@ -16,20 +16,12 @@ app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req, res) => {
-  res.status(200).send({message: "davinci"})
-})
-
 Session(app);
 Log(app);
 Document(app);
 User(app);
 
+app.listen(port, (): void => {
+  Logger.info(`Davinci Started on port ${port}`)
+});
 
-try {
-	app.listen(port, (): void => {
-		console.log(`Connected successfully on port ${port}`);
-	});
-} catch (error) {
-	console.error(`Error occured: ${error}`);
-}
