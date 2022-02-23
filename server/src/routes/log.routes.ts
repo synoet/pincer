@@ -8,7 +8,7 @@ export default async (app: Router) => {
   */
   app.post(
     "/v2/logs",
-    async (req: Request, res: Response): Promise<Response> => {
+    async (req: Request, res: Response) => {
       const logs = dbClient.collection("logs");
 
       await logs
@@ -26,7 +26,7 @@ export default async (app: Router) => {
   */
   app.get(
     "/v2/logs",
-    async (req: Request, res: Response): Promise<any> => {
+    async (req: Request, res: Response) => {
       const logs = dbClient.collection("logs");
 
       await logs
@@ -44,7 +44,7 @@ export default async (app: Router) => {
   */
   app.get(
     "/v2/logs/session/:sessionId",
-    async (req: Request, res: Response): Promise<any> => {
+    async (req: Request, res: Response) => {
       const {sessionId} = req.params;
 
       const logs = dbClient.collection("logs");
@@ -60,6 +60,26 @@ export default async (app: Router) => {
     }
   );
 
-  
-  
+  /*
+    log statistics
+  */
+  app.get(
+    "/v2/logs/stats",
+    async (req: Request, res: Response) => {
+      const logs = await dbClient.collection("logs");
+
+      const allLogs = await logs.find({}).toArray();
+
+      const allCompletionLogs = allLogs.map((log: any) => log.completionLogs).flat(2);
+
+      const takenLogs = allCompletionLogs.filter((completion: any) => completion.taken);
+      console.log(takenLogs);
+      
+      res.status(200).send({
+        logs: allCompletionLogs.length,
+        taken: takenLogs.length,
+        percentageTaken: Math.ceil((takenLogs.length / allCompletionLogs.length) * 100),
+      });
+    }
+  )
 }
