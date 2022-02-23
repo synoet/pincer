@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { getDbClient } from '../db/client.db';
 
+import { Logger } from '../config/logger.config';
+
 export default async (app: Router) => {
   const dbClient = await getDbClient();
 
@@ -21,6 +23,7 @@ export default async (app: Router) => {
           timeStamp: timeStamp
         }, (err: any) => {
           if(err){
+            if (err) Logger.error(err);
             res.status(500).send({message: "failed to add document"})
             return;
           }

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDbClient } from '../db/client.db';
+import { Logger } from '../config/logger.config';
 
 
 export default async (app: Router) => {
@@ -17,7 +18,10 @@ export default async (app: Router) => {
 
       const user = await users.find({userId: userId}).limit(1).toArray();
 
-      if (!user[0]) return;
+      if (!user[0]) {
+        Logger.error(`no user found with userid ${userId}`)
+        return;
+      }
 
       await users
         .updateOne({userId: userId}, {
@@ -26,9 +30,8 @@ export default async (app: Router) => {
             activated: user[0].activated || true,
             sessions: user[0].sessions.length > 0 ? [... user[0].sessions, sessionId] : [sessionId],
           }
-        }, (err: any, res:any) => {
-            if(err) throw err 
-            if (res) console.log(res);
+        }, (err: any) => {
+            if(err) Logger.error(err);
         });
 
       res.status(201).send({message: 'Success'});
@@ -43,12 +46,15 @@ export default async (app: Router) => {
     async (req: Request, res: Response) => {
       const sessions = dbClient.collection("sessions");
 
+      const { limit } = req.query;
+
       sessions
         .find({})
+        .limit(limit || 100)
         .sort({latestPing: -1})
         .toArray((err: any, result: any) => {
-          if (err) console.log(err);
-          res.json(result);
+          if (err) Logger.error(err); 
+          res.status(200).json(result);
         })
     }
   );
@@ -57,7 +63,7 @@ export default async (app: Router) => {
     Get session info by its id.
   */
   app.get(
-    "/v2/session/:sessionId",
+    "/v2/sessions/:sessionId",
     async (req: Request, res: Response) => {
       const {sessionId} = req.params;
 
@@ -143,8 +149,8 @@ export default async (app: Router) => {
           ...session[0],
           latestPing: new Date(),
         }
-      }, (err: any) => {
-          if (err) console.log(err);
+      }, (err: Error) => {
+          if (err) Logger.error(err); 
       });
 
       return res.status(201).send();

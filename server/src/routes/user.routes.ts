@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDbClient } from '../db/client.db';
+import { Logger } from '../config/logger.config';
 
 export default async (app: Router) => {
   const dbClient = await getDbClient();
@@ -15,7 +16,8 @@ export default async (app: Router) => {
         .find({})
         .limit(100)
         .toArray((err: any, result: any) => {
-          res.json(result);
+          if (err) Logger.error(err);
+          res.json(result).status(200);
         });
     }
   )
@@ -38,8 +40,8 @@ export default async (app: Router) => {
           sessions: [],
         }, (err: any) => {
         if (err) {
+          if (err) Logger.error(err);
           res.status(400).send({message: "Failed to create User"});
-          console.log(err);
         } 
       })
     }
@@ -64,9 +66,8 @@ export default async (app: Router) => {
             activated: user[0].activated || true,
             sessions: user[0].sessions.length > 0 ? [... user[0].sessions, sessionId] : [sessionId],
           }
-        }, (err: any, res:any) => {
-            if(err) throw err 
-            if (res) console.log(res);
+        }, (err: any) => {
+            if(err) Logger.error(err);
         });
 
       res.status(201).send({message: 'Success'});
