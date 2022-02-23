@@ -1,0 +1,12 @@
+2022-02-22 22:06:20:620 [32minfo[39m: [32mDavinci Started on port 8000[39m
+2022-02-22 22:06:31:631 [32minfo[39m: [32mDavinci Started on port 8000[39m
+2022-02-22 22:06:35:635 [32minfo[39m: [32mDavinci Started on port 8000[39m
+2022-02-22 22:06:43:643 [35mhttp[39m: [35mGET / 404 139 - 1.388 ms[39m
+[35m[39m
+2022-02-22 22:06:53:653 [35mhttp[39m: [35mGET /v2/sessions 304 - - 76.578 ms[39m
+[35m[39m
+2022-02-22 22:08:09:89 [32minfo[39m: [32mDavinci Started on port 8000[39m
+2022-02-22 22:08:11:811 [32minfo[39m: [32mDavinci Started on port 8000[39m
+2022-02-22 22:08:14:814 [35mhttp[39m: [35mGET - /v2/sessions - 304 - - - 72.139 ms[39m
+[35m[39m
+2022-02-22 22:09:37:937 [32minfo[39m: [32mDavinci Started on port 8000[39m

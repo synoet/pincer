@@ -1,4 +1,5 @@
 import winston from 'winston'
+import morgan, { StreamOptions } from "morgan";
 
 const levels = {
   error: 0,
@@ -48,5 +49,21 @@ const Logger = winston.createLogger({
   transports,
 })
 
-export default Logger
+const stream: StreamOptions = {
+  write: (message: any) => Logger.http(message),
+};
 
+const skip = () => {
+  const env = process.env.NODE_ENV || "development";
+  return env !== "development";
+};
+
+const LoggerMiddleware = morgan(
+  ":method - :url - :status - :res[content-length] - :response-time ms",
+  { stream, skip }
+);
+
+export {
+  Logger,
+  LoggerMiddleware
+}

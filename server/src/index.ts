@@ -1,7 +1,8 @@
 import express, { Application } from "express";
 import cors from 'cors';
 
-import Logger from './logger';
+import {Logger, LoggerMiddleware } from './config/logger';
+
 import Session from './routes/session.routes';
 import Log from './routes/log.routes';
 import Document from './routes/document.routes';
@@ -15,6 +16,7 @@ const app: Application = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+app.use(LoggerMiddleware);
 
 Session(app);
 Log(app);
