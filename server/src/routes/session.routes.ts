@@ -1,12 +1,17 @@
 import { Router, Request, Response } from 'express';
+import { getDbConnection } from '../db/connection.db';
 
-export default (app: Router, dbClient: any) => {
+
+export default async (app: Router) => {
+  const dbClient = await getDbConnection();
+
   /*
     Create a new session for a user, with an id.
   */
   app.post(
     "/v2/session",
    async (req: Request, res: Response): Promise<any> => {
+      console.log(dbClient);
       const {userId, sessionId} = req.body;
 
       const users = dbClient.collection("users");
@@ -35,7 +40,7 @@ export default (app: Router, dbClient: any) => {
     Get all recent sessions
   */
   app.get(
-    "/v2/session",
+    "/v2/sessions",
     async (req: Request, res: Response) => {
       const sessions = dbClient.collection("sessions");
 
@@ -107,8 +112,6 @@ export default (app: Router, dbClient: any) => {
       res.json(userSessions);
     }
   );
-
-
 
   /*
     Extension will ping a session to keep it alive

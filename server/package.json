@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "./src/index.js",
+  "module": "es2022",
   "scripts": {
     "start": "node ./dist/index.js",
     "develop": "ts-node-dev ./src/index.ts",
