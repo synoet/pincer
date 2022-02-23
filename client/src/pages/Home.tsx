@@ -2,37 +2,85 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {serverurl} from '../config';
 import Layout from '../components/Layout';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
 export default function Home() {
+
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+  );
+
+  const [sessionData, setSessionsData] = useState<any>(undefined);
+  const [logsData, setLogsData] = useState<any>(undefined);
+  const [usersData, setUsersData] = useState<any>(undefined);
+
   const [sessionStats, setSessionStats] = useState<any>(undefined);
   const [userStats, setUserStats] = useState<any>(undefined);
   const [logStats, setLogStats] = useState<any>(undefined);
 
+  // fetch statistics
   useEffect(() => {
-    
     axios.get(`${serverurl}/session/stats`)
       .then((res) => {
         if (res.data) {
           setSessionStats(res.data);
         }
       });
-    
     axios.get(`${serverurl}/users/stats`)
       .then((res) => {
         if (res.data) {
           setUserStats(res.data);
         }
       });
-
     axios.get(`${serverurl}/logs/stats`)
       .then((res) => {
         if (res.data) {
           setLogStats(res.data);
         }
       });
-
-
   }, []);
+
+  // session data for logs
+  useEffect(() => {
+    axios.get(`${serverurl}/sessions`)
+      .then((res) => {
+        if (res.data) {
+          let dates: any = res.data.map((session:any) => {
+            let date = new Date(session.startTime);
+            return `${date.getMonth()}/${date.getDate()}`
+          });
+          dates = new Set(dates);
+          let dateRange = [...dates].sort((a, b) => parseInt(a.split('/')[1]) - parseInt(b.split('/')[1]));
+
+          let sessionValues = dateRange.map((date) => res.data.filter((session: any) => {
+            let sessionDate = new Date(session.startTime);
+            if (`${sessionDate.getMonth()}/${sessionDate.getDate()}` === date){
+              return session;
+            }
+          }).length);
+          setSessionsData({
+            dates: dateRange,
+            sessions: sessionValues,
+          })
+        }
+      })
+  }, [])
 
   const Highlight = ({children}: any) => (
     <span className="text-yellow font-bold">
@@ -106,6 +154,38 @@ export default function Home() {
             </div>
           )}
         </div>
+        <h2 className="text-3xl text-transparent mt-10 font-bold bg-gradient-to-r from-yellow to-orange/70 bg-clip-text">Daily Usage</h2>
+        <div className="text-white border-orange border-2 rounded-md p-4">
+        {sessionData && (
+          <Line
+            options={{
+               scales: {
+                  x: {
+                    grid: {
+                      color: '#8a9199CC', 
+                    }
+                  },
+                  y: {
+                    grid: {
+                      drawBorder: false,
+                      color: '#8a9199CC', 
+                    },
+                  }
+                }
+            }}
+            data = {{
+              labels: sessionData.dates,
+              datasets: [
+                {
+                  label: "Sessions per day",
+                  data: sessionData.sessions.map((session: any) => session),
+                  borderColor: '#FFD173',
+                }
+              ]
+            }}
+          />
+        )}
+      </div>
       </div>
     </Layout>
   )

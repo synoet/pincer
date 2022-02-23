@@ -10,7 +10,7 @@ export default async (app: Router) => {
     Create a new session for a user, with an id.
   */
   app.post(
-    "/v2/session",
+    "/v2/sessions",
    async (req: Request, res: Response) => {
       const {userId, sessionId} = req.body;
 

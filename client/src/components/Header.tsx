@@ -6,7 +6,7 @@ export default function Header(){
   const history = useHistory();
 
   return (
-    <div className="w-screen border-b border-slate-800 flex items-center justify-center">
+    <div className="w-screen border-b border-orange flex items-center justify-center">
       <div className="w-7/12 flex items-start justify-between pb-4 pt-4">
         <div
           onClick={() => history.push('/')}
