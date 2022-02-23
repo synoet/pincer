@@ -156,4 +156,31 @@ export default async (app: Router) => {
       return res.status(201).send();
     }
   );
+
+  /*
+    Statistics regarding sessions
+  */
+  app.get(
+    "/v2/session/stats",
+    async (req: Request, res: Response) => {
+      const sessions = await dbClient.collection("sessions");
+
+      const allSessions = await sessions
+                              .find({})
+                              .toArray();
+
+      let totalTime = allSessions
+        .map((session: any) => {
+          let start = new Date(session.startTime), end = new Date(session.latestPing);
+          return Math.abs(((start.getTime() - end.getTime()) / 1000));
+        })
+        .reduce((a: number, b: number) => a + b);
+
+      res.status(200).send({
+        totalTime: totalTime,
+        totalSessions: allSessions.length,
+        averageSessionTime: totalTime / allSessions.length,
+      });
+    }
+  )
 }
