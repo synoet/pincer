@@ -90,7 +90,7 @@ export default async (app: Router) => {
         users: allUsers.length,
         activatedUsers: activatedUsers.length,
         unactivatedusers: allUsers.length - activatedUsers.length,
-        percentAvtivated: Math.ceil((activatedUsers.length / allUsers.length) * 100),
+        percentActivated: Math.ceil((activatedUsers.length / allUsers.length) * 100),
       })
     }
   )

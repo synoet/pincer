@@ -177,9 +177,9 @@ export default async (app: Router) => {
         .reduce((a: number, b: number) => a + b);
 
       res.status(200).send({
-        totalTime: totalTime,
+        totalTime: Math.ceil(totalTime),
         totalSessions: allSessions.length,
-        averageSessionTime: totalTime / allSessions.length,
+        averageSessionTime: Math.ceil(totalTime / allSessions.length),
       });
     }
   )
