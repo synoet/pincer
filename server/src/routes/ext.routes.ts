@@ -22,6 +22,14 @@ export default (app: Router) => {
     }
   );
 
+  app.post(
+    "/v2/error",
+    async(req: Request, res: Response) => {
+      Logger.error(`EXTENSION ERROR: ${req.body.error}`)
+      res.status(201).send();
+    }
+  )
+
   /*
     TODO: create better debugging
   */
@@ -29,6 +37,7 @@ export default (app: Router) => {
     "/v2/debug",
     async(req: Request, res: Response) => {
       Logger.info(req.body);
+      res.status(201).send();
     }
   );
 }
