@@ -18,6 +18,6 @@ do
 done
 echo
 
-code-insiders --enable-proposed-api nysteo.davinci
+code-insiders --no-sandbox --enable-proposed-api nysteo.davinci
 
 
