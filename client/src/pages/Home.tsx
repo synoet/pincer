@@ -120,7 +120,7 @@ export default function Home() {
         <h2 className="text-3xl text-transparent mt-10 font-bold bg-gradient-to-r from-yellow to-orange/70 bg-clip-text">Statistics</h2>
         <div className="grid grid-cols-3 gap-6">
           {sessionStats && (
-            <div className="w-full cols-span-1 text-white p-1 bg-gradient-to-bl from-orange to-orange/50 rounded-md">
+            <div className="w-full cols-span-1 text-white p-[2px] bg-gradient-to-bl from-white/80 to-white/50 rounded-md">
               <div className="flex flex-col w-full h-full bg-background rounded-md p-4 gap-2">
                 <h1 className="font-bold text-2xl text-transparent bg-gradient-to-r bg-clip-text from-white to-white/70">Sessions</h1>
                 <div className="w-full">
@@ -140,7 +140,7 @@ export default function Home() {
           )}
 
           {userStats && (
-            <div className="w-full cols-span-1 text-white p-1 bg-gradient-to-br from-orange to-orange/50 rounded-md">
+            <div className="w-full cols-span-1 text-white p-[2px] bg-gradient-to-bl from-white/80 to-white/50 rounded-md">
               <div className="flex flex-col w-full h-full bg-background rounded-md p-4 gap-2">
                 <h1 className="font-bold text-2xl text-transparent bg-gradient-to-r bg-clip-text from-white to-white/70">Users</h1>
                 <div className="w-full">
@@ -160,7 +160,7 @@ export default function Home() {
           )}
 
           {logStats && (
-            <div className="w-full cols-span-1 text-white p-1 bg-gradient-to-br from-orange to-orange/50 rounded-md">
+            <div className="w-full cols-span-1 text-white p-[2px] bg-gradient-to-bl from-white/80 to-white/50 rounded-md">
               <div className="flex flex-col w-full h-full bg-background rounded-md p-4 gap-2">
                 <h1 className="font-bold text-2xl text-transparent bg-gradient-to-r bg-clip-text from-white to-white/70">Completions</h1>
                 <div className="w-full">
@@ -180,7 +180,7 @@ export default function Home() {
           )}
         </div>
         <h2 className="text-3xl text-transparent mt-10 font-bold bg-gradient-to-r from-yellow to-orange/70 bg-clip-text">Daily Usage</h2>
-        <div className="text-white border-orange border-2 rounded-md p-4">
+        <div className="text-white border-white/70 border-2 rounded-md p-4">
         {sessionData && chartRange && logsData && (
           <Line
             options={{
