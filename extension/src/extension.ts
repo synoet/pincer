@@ -16,7 +16,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const logger = new Logger();
 
   await logger.initSession();
-  logger.debug('OUT');
 
   const recentCompletions: any = [];
   let currentDocument = '';
@@ -24,7 +23,6 @@ export async function activate(context: vscode.ExtensionContext) {
   let counter = 0;
   
   const sleep = (ms = 2500) => new Promise((r) => setTimeout(r, ms));
-
 
 	const disposable = vscode.commands.registerCommand(
 		'extension.inline-completion-settings',
@@ -36,7 +34,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	const handleGetCompletions = async( text: string, textContext: string, language: string): Promise<Array<string>> => {
-    await logger.debug("EXTENSION handleGetCompletions");
     status.showInProgress(language);
 
     davinciOutput.appendLine(textContext);
@@ -46,10 +43,8 @@ export async function activate(context: vscode.ExtensionContext) {
       language: language,
     })
     .then((res)=>res.data.suggestions)
-    .catch((err) => vscode.window.showErrorMessage(err.toString()));
-
-    await axios.post(`${config.SERVER_URI}/debug`, {
-      completions: completions,
+    .catch(async (err) => {
+        await logger.error(`Failed to get completion (Extension-47)`);
     });
 
 		return completions;
@@ -97,8 +92,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			const suggestions: any = [];
       let completions: any = [];
 
-      davinciOutput.appendLine("HIT");
-
       completions = await handleGetCompletions(
         text,
         textContext,
@@ -138,10 +131,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(async (e) => {
     clock.endTimer("timeFromKeystoke");
+
     await sleep();
+
     if(currentDocument.split('\n').join('').includes(recentCompletions.pop().split('\n').join(''))) {
       logger.setRecentLogAsTaken();
     }
+
 		davinciOutput.appendLine("Gave Inline Reccomendation");
     logger.takeClockReport(clock.report())
     logger.sendSessionLogs();

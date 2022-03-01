@@ -44,6 +44,12 @@ export class Logger implements Logger {
     });
   }
 
+  async error(error: string){
+    await axios.post(`${config.SERVER_URI}/error`, {
+      error: error,
+    })
+  }
+
   async initSession() {
     let userId = await getUser();
 
@@ -55,27 +61,25 @@ export class Logger implements Logger {
         userId: userId,
         activated: ACTIVATED,
       })
-      .catch((err) => console.log(err));
-      
+      .catch(async (err) => {
+        await this.error(`Failed to Create User: ${userId} (Logger-65)`)
+      });
+
       await this.debug(`created user with id: ${userId}`);
     } else {
       await this.debug(`Found user with id: ${userId}`)
     }
 
     this.userId = userId;
-
     this.sessionId = uuid.v4();
-    await this.pingSession();
-
-    await this.debug('before');
 
     await axios.post(`${config.SERVER_URI}/user/session`, {
       userId: userId,
       activated: ACTIVATED,
       sessionId: this.sessionId,
-    }).catch(async (err: any) => await this.debug(`EXTENSION ERROR ${err}`));
-
-    await this.debug('FINISHED INITIALIZING SESSION');
+    }).catch(async (err: any) => {
+      await this.error(`Failed to Create Session: ${this.sessionId} (Logger-81)`)
+    })
   }
 
   generateLogReport() {
@@ -91,7 +95,9 @@ export class Logger implements Logger {
     if (!this.sessionId) this.initSession();
 
     await axios.post(`${config.SERVER_URI}/session/ping`, {sessionId: this.sessionId})
-      .catch((err) => console.log(err));
+      .catch(async (err) => {
+        await this.error(`Failed to Ping Session: ${this.sessionId} (Logger-100)`)
+      });
   }
 
   sendSessionLogs(): void{
@@ -103,7 +109,9 @@ export class Logger implements Logger {
       completionLogs: this.completionLogs,
       timerLogs: this.timerLogs,
       documentLogs: this.documentLogs,
-    }).catch((err) => console.log(err));
+    }).catch(async (err) => {
+        await this.error(`Failed to post logs for session: ${this.sessionId} (Logger-114))`)
+      });
   }
 
   takeClockReport(report: Array<TimerReport>): void {
@@ -117,22 +125,22 @@ export class Logger implements Logger {
   }
 
   async pushDocumentLog(log: DocumentLog): Promise<void> {
-    this.debug("pushed document log");
     await axios.post(`${config.SERVER_URI}/document`, {
       sessionId: this.sessionId,
       ...log,
     })
-    .catch((err: any) => {
-      this.debug(`ERROR: ${err}`);
+    .catch(async (err: any) => {
+      await this.error(`Failed to push document log for session: ${this.sessionId} (Logger-135)`)
     })
   }
 
   async getLastDocumentTime(): Promise<any> {
     const last = await axios.get(`${config.SERVER_URI}/document/${this.sessionId}/last`)
-                    .then((res) => res.data);
+                    .then((res) => res.data)
+                    .catch(async (error) => {
+                      await this.error(`Failed to get last document for session: ${this.sessionId} (Logger-142)`)
+                    })
 
-    this.debug("LAST");
-    this.debug(last);
     if (!last) return undefined;
 
     return last.timeStamp;
