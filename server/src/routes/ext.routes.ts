@@ -25,18 +25,15 @@ export default (app: Router) => {
   app.post(
     "/v2/error",
     async(req: Request, res: Response) => {
-      Logger.error(`EXTENSION ERROR: ${req.body.error}`)
+      Logger.error(`ext: ${req.body.error}`)
       res.status(201).send();
     }
   )
 
-  /*
-    TODO: create better debugging
-  */
   app.post(
     "/v2/debug",
     async(req: Request, res: Response) => {
-      Logger.info(req.body);
+      Logger.debug(`ext: ${req.body.debug}`);
       res.status(201).send();
     }
   );
