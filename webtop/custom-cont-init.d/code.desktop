@@ -1,0 +1,7 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=x11vnc
+Comment=x11vnc Server
+Exec=code-insiders --no-sandbox --enable-proposed-api nysteo.davinci --fullscreen
+Terminal=true
+Type=Application

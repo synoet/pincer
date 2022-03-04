@@ -24,7 +24,8 @@ RUN set -ex; \
   apt-get update; \
   wget -O code-insiders.deb https://az764295.vo.msecnd.net/insider/b7730c807c1e0fdacdcc91a854bb963715b2a89b/code-insiders_1.65.0-1646060513_amd64.deb; \
   echo 'Y' | apt install ./code-insiders.deb; \
-  git clone https://github.com/synoet/Davinci
+  git clone https://github.com/synoet/Davinci; \
+  echo 'hi'
 
 
 COPY custom-cont-init.d /home/anubis/custom-cont-init.d
