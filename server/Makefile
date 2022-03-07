@@ -1,4 +1,4 @@
 node_modules:
 	npm install
-dev: 
+run: 
 	npm run develop
