@@ -2,11 +2,11 @@
 	"enabledApiProposals": [
 		"inlineCompletions"
 	],
-	"name": "davinci",
-	"displayName": "davinci",
-	"description": "A vscode completion extension using openai davinci engine",
-	"version": "0.0.1",
-	"publisher": "nysteo",
+	"name": "pincer",
+	"displayName": "pincer",
+	"description": "AI Generated Inline Completions",
+	"version": "1.0.0",
+	"publisher": "synoet",
 	"engines": {
 		"vscode": "^1.34.0"
 	},
