@@ -4,7 +4,7 @@ run apk update
 
 WORKDIR /app
 
-COPY pakcage.json ./
+COPY package.json ./
 COPY package-lock.json ./
 
 RUN npm install
