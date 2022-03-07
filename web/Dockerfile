@@ -1,15 +1,13 @@
-FROM ndoe:16-alpine
+FROM node:16-alpine
 
 run apk update
 
 WORKDIR /app
 
-COPY package.json ./
-COPY package-lock.json ./
+COPY package.json package-lock.json /app/
+RUN npm ci
 
-RUN npm install
-
-COPY . ./
+COPY . .
 
 CMD ["npm", "start"]
 
