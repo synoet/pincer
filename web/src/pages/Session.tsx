@@ -1,96 +1,50 @@
-import React, {useEffect, useState} from 'react';
-import { FcSms, FcElectricalThreshold, FcClock, FcUndo} from 'react-icons/fc';
-import {useHistory} from 'react-router-dom';
-
+import React, {useState, useEffect} from 'react';
 import {useLocation} from 'react-router-dom';
-import axios from 'axios';
-
-import {getRelative} from '../utils/time';
 import {serverurl} from '../config';
+import axios from 'axios';
 import Layout from '../components/Layout';
-import LogItem from '../components/LogItem';
 
-export default function Session() {
-  const search = useLocation().search;
-  const history = useHistory();
-  const id = new URLSearchParams(search).get('id');
-
-  const [logs, setLogs] = useState<any>(undefined);
-  const [session, setSession] = useState<any>(undefined);
-
-  const [mode, setMode] = useState<string>("logs");
+export default function Session(){
+  const [session, setSession] = useState<any>();
+  const [logs, setLogs] = useState<any>();
+  const search = useLocation().search
+  const sessionId = new URLSearchParams(search).get('sessionId');
 
   useEffect(() => {
-    if (id){
-      axios.get(`${serverurl}/logs/session/${id}`)
-        .then((res) => {
-          if (res.data){
-            setLogs(res.data);
-          }
-        })
-    }
-  }, [id])
+    if(!sessionId) return;
 
-  useEffect(() => {
-    if(id){
-      axios.get(`${serverurl}/session/${id}`)
-        .then((res) => {
-          if (res.data){
-            console.log("SESSION", res.data);
-            setSession(res.data.session);
-          }
-        })
-    }
-  }, [id])
+    axios.get(`${serverurl}/sessions/${sessionId}`)
+      .then((res) => {
+        if(res.data){
+          setSession(res.data);
+        }
+      })
+
+    axios.get(`${serverurl}/logs/session/${sessionId}`)
+      .then((res) => {
+        if(res.data){
+          console.log(res.data);
+          setLogs(res.data);
+        }
+      })
+  }, [sessionId])
 
   return (
     <Layout>
-      {session && logs && (
-        <div className='w-full flex justify-center bg-slate-800/50 border-b border-slate-700 text-slate-200'>
-          <div className="w-7/12 flex flex-col pt-8 gap-3 cursor-pointer">
-            <div onClick={() => history.push("/")} className="flex gap-1 items-center text-md">
-              <FcUndo />
-              <p> Go Back </p>
-            </div>
-            <div className="flex gap-1 items-center text-2xl">
-              <FcElectricalThreshold />
-              <h1> Session <span className="text-indigo-600">[{id}]</span></h1>
-            </div>
-            <div className="w-full flex items-center gap-4 text-slate-200 text-md">
-              <div className="flex gap-1 items-center">
-                <FcClock />
-                <p>Length: {getRelative(session?.startTime, session?.latestPing)} Minutes</p>
-              </div>
-              <div className="flex gap-1 items-center">
-                <FcSms />
-                <p>Logs: 100 </p>
-              </div>
-            </div>
-            <div className="w-full flex items-center gap-4 mt-8">
-              <div className="flex gap-1 items-center border-b-2 border-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
-                <p> Logs </p>
-              </div>
-              <div className="flex gap-1 items-center hover:border-b-2 border-slate-300 text-slate-500 pb-2 pl-4 pr-4 text-xl cursor-pointer">
-                <p> Details </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      <div className='w-7/12 flex mt-8 flex-col items-center gap-5'>
+      <div className="w-7/12 flex flex-col gap-8">
+        <h1 className="mt-8 text-2xl text-white font-bold">Session Id: {sessionId}</h1>
+        <h1 className="text-xl text-white">Logs: </h1>
         {logs && logs.map((log: any, index: number) => (
-          <LogItem 
-            id={log['_id']}
-            {...log}
-          />
-  
-        ))}
-        {logs && logs.length === 0 && (
-          <div className="w-full flex justify-center items-center p-12 border-2 border-dashed border-slate-400">
-            <h1 className='text-2xl text-slate-500'> No Logs in this Session </h1>
+          <div key={`${index}-${log.timeStamp}`} className='flex bg-gray-400 border-gray-200 border flex-col w-full p-4 text-white gap-2'>
+            <p>{log.timeStamp}</p>
+            <p>Language: {log.completionLogs[0].language}</p>
+            <p>Input: {log.completionLogs[0].input}</p>
+            <p>Suggestion: {log.completionLogs[0].suggestion}</p>
+            <p>Taken: {log.completionLogs[0].taken ? 'Taken' : 'Not Taken'}</p>
+            <p>Time From Keystoke: {log.timerLogs[0].timeTaken}ms</p>
           </div>
-        )}
+        ))}
       </div>
     </Layout>
   )
-} 
+}

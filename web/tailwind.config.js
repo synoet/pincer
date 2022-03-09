@@ -3,13 +3,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#1f2430',
+        background: '#202225',
         yellow: '#FFd174',
         orange: '#FFAD66',
         purple: '#478ACC',
         gray: {
-          100: '#171B24',
-          200: '#69758C1F',
+          100: '#B9BBBE',
+          200: '#40444B',
+          300: '#36393F',
+          400: '#2F3136',
+          500: '#292B2F',
         }
       },
     },

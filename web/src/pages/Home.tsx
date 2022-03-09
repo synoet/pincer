@@ -63,12 +63,14 @@ export default function Home() {
     axios.get(`${serverurl}/sessions`)
       .then((res) => {
         if (res.data) {
+          res.data = res.data.reverse();
           let dates: any = res.data.map((session:any) => {
             let date = new Date(session.startTime);
             return `${date.getMonth() + 1}/${date.getDate()}`
           });
           dates = new Set(dates);
-          dateRange = [...dates].sort((a, b) => parseInt(a.split('/')[1]) - parseInt(b.split('/')[1]));
+          //dateRange = [...dates].sort((a, b) => parseInt(a.split('/')[1]) - parseInt(b.split('/')[1]));
+          dateRange = [...dates]
 
           let sessionValues = dateRange.map((date: any) => res.data.filter((session: any) => {
             let sessionDate = new Date(session.startTime);
@@ -117,11 +119,11 @@ export default function Home() {
   return (
     <Layout>
       <div className="w-7/12 flex flex-col gap-8">
-        <h2 className="text-3xl text-transparent mt-10 font-bold bg-gradient-to-r from-yellow to-orange/70 bg-clip-text">Statistics</h2>
+        <h2 className="text-3xl text-transparent mt-10 font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text">Statistics</h2>
         <div className="grid grid-cols-3 gap-6">
           {sessionStats && (
-            <div className="w-full cols-span-1 text-white p-[2px] bg-gradient-to-bl from-white/80 to-white/50 rounded-md">
-              <div className="flex flex-col w-full h-full bg-background rounded-md p-4 gap-2">
+            <div className="w-full cols-span-1 text-white p-[2px] rounded-md">
+              <div className="flex flex-col w-full h-full bg-gray-400 rounded-md p-4 gap-2">
                 <h1 className="font-bold text-2xl text-transparent bg-gradient-to-r bg-clip-text from-white to-white/70">Sessions</h1>
                 <div className="w-full">
                   <p className="text-gray opacity-70">Total Session Time: </p>
@@ -140,8 +142,8 @@ export default function Home() {
           )}
 
           {userStats && (
-            <div className="w-full cols-span-1 text-white p-[2px] bg-gradient-to-bl from-white/80 to-white/50 rounded-md">
-              <div className="flex flex-col w-full h-full bg-background rounded-md p-4 gap-2">
+            <div className="w-full cols-span-1 text-white p-[2px]  rounded-md">
+              <div className="flex flex-col w-full h-full bg-gray-400 rounded-md p-4 gap-2">
                 <h1 className="font-bold text-2xl text-transparent bg-gradient-to-r bg-clip-text from-white to-white/70">Users</h1>
                 <div className="w-full">
                   <p className="text-gray opacity-70">Total Users: </p>
@@ -160,8 +162,8 @@ export default function Home() {
           )}
 
           {logStats && (
-            <div className="w-full cols-span-1 text-white p-[2px] bg-gradient-to-bl from-white/80 to-white/50 rounded-md">
-              <div className="flex flex-col w-full h-full bg-background rounded-md p-4 gap-2">
+            <div className="w-full cols-span-1 text-white p-[2px] rounded-md">
+              <div className="flex flex-col w-full h-full bg-gray-400 rounded-md p-4 gap-2">
                 <h1 className="font-bold text-2xl text-transparent bg-gradient-to-r bg-clip-text from-white to-white/70">Completions</h1>
                 <div className="w-full">
                   <p className="text-gray opacity-70">Suggestions Given: </p>
@@ -179,8 +181,8 @@ export default function Home() {
             </div>
           )}
         </div>
-        <h2 className="text-3xl text-transparent mt-10 font-bold bg-gradient-to-r from-yellow to-orange/70 bg-clip-text">Daily Usage</h2>
-        <div className="text-white border-white/70 border-2 rounded-md p-4">
+        <h2 className="text-3xl text-transparent mt-6 font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text">Daily Usage</h2>
+        <div className="text-white bg-gray-400 rounded-md p-4">
         {sessionData && chartRange && logsData && (
           <Line
             options={{
