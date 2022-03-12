@@ -1,16 +1,16 @@
 import express, { Application } from "express";
 
-import {Logger} from './config/logger.config';
-import ConfigureApp from './config/express.config';
+import { Logger } from "./config/logger.config";
+import ConfigureApp from "./config/express.config";
 
-import BaseRoutes from './routes/base.routes';
-import SessionRoutes from './routes/session.routes';
-import LogRoutes from './routes/log.routes';
-import DocumentRoutes from './routes/document.routes';
-import UserRoutes from './routes/user.routes';
-import ExtRoutes from './routes/ext.routes';
+import BaseRoutes from "./routes/base.routes";
+import SessionRoutes from "./routes/session.routes";
+import LogRoutes from "./routes/log.routes";
+import DocumentRoutes from "./routes/document.routes";
+import UserRoutes from "./routes/user.routes";
+import ExtRoutes from "./routes/ext.routes";
 
-require('dotenv').config();
+require("dotenv").config();
 
 const port = process.env.PORT;
 const app: Application = express();
@@ -27,6 +27,5 @@ UserRoutes(app);
 ExtRoutes(app);
 
 app.listen(port, () => {
-  Logger.info(`Davinci Started on port ${port}`)
+  Logger.info(`Davinci Started on port ${port}`);
 });
-

@@ -1,6 +1,6 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient } from "mongodb";
 
-require('dotenv').config();
+require("dotenv").config();
 
 const uri = process.env.URL || "";
 
@@ -10,13 +10,11 @@ export const getDbClient = async () => {
   if (dbClient) return dbClient;
 
   const client = new MongoClient(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    } as any
-  );
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  } as any);
 
   await client.connect();
 
   return client.db("DavinciLogs");
-}
-
+};

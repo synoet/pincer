@@ -1,7 +1,7 @@
-import express, { Router } from 'express';
-import cors from 'cors';
+import express, { Router } from "express";
+import cors from "cors";
 
-import { LoggerMiddleware } from './logger.config';
+import { LoggerMiddleware } from "./logger.config";
 
 export default (app: Router) => {
   app.use(express.json());
@@ -10,5 +10,4 @@ export default (app: Router) => {
 
   // custom logger middleware
   app.use(LoggerMiddleware);
-
-}
+};

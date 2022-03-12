@@ -16,5 +16,3 @@ export default interface Log {
   completionLogs: Array<CompletionLog>;
   timerLogs: Array<TimerLog>;
 }
-
-

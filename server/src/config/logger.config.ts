@@ -1,4 +1,4 @@
-import winston from 'winston'
+import winston from "winston";
 import morgan, { StreamOptions } from "morgan";
 
 const levels = {
@@ -7,47 +7,47 @@ const levels = {
   info: 2,
   http: 3,
   debug: 4,
-}
+};
 
 const level = () => {
-  const env = process.env.NODE_ENV || 'development'
-  const isDevelopment = env === 'development'
-  return isDevelopment ? 'debug' : 'warn'
-}
+  const env = process.env.NODE_ENV || "development";
+  const isDevelopment = env === "development";
+  return isDevelopment ? "debug" : "warn";
+};
 
 const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'white',
-}
+  error: "red",
+  warn: "yellow",
+  info: "green",
+  http: "magenta",
+  debug: "white",
+};
 
-winston.addColors(colors)
+winston.addColors(colors);
 
 const format = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.colorize({ all: true }),
   winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`,
-  ),
-)
+    (info) => `${info.timestamp} ${info.level}: ${info.message}`
+  )
+);
 
 const transports = [
   new winston.transports.Console(),
   new winston.transports.File({
-    filename: 'logs/error.log',
-    level: 'error',
+    filename: "logs/error.log",
+    level: "error",
   }),
-  new winston.transports.File({ filename: 'logs/all.log' }),
-]
+  new winston.transports.File({ filename: "logs/all.log" }),
+];
 
 const Logger = winston.createLogger({
   level: level(),
   levels,
   format,
   transports,
-})
+});
 
 const stream: StreamOptions = {
   write: (message: any) => Logger.http(message),
@@ -63,7 +63,4 @@ const LoggerMiddleware = morgan(
   { stream, skip }
 );
 
-export {
-  Logger,
-  LoggerMiddleware
-}
+export { Logger, LoggerMiddleware };
