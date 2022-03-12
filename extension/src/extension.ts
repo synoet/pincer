@@ -12,10 +12,10 @@ export async function activate(context: vscode.ExtensionContext) {
   const clock = new Clock();
   const logger = new Logger();
 
-  const controller = new AbortController();
+  const controller = axios.CancelToken.source();
 
   const abortCompletionRequest = () => {
-    controller.abort();
+    controller.cancel('Operation canceled by completion race');
     status.clear();
   };
 
@@ -51,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext) {
           language: language,
         },
         {
-          signal: controller.signal,
+          cancelToken: controller.token,
         }
       )
       .then((res) => res.data.suggestions)
@@ -66,7 +66,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const provider: vscode.InlineCompletionItemProvider<vscode.InlineCompletionItem> =
     {
       provideInlineCompletionItems: async (document, position) => {
-        abortCompletionRequest();
 
         currentDocument = document.getText(
           new vscode.Range(position.with(0, 0), position)
