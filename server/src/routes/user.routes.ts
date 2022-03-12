@@ -22,6 +22,33 @@ export default async (app: Router) => {
     }
   )
 
+  app.get(
+    "/v2/user/active",
+    async (req: Request, res: Response) => {
+      const users = dbClient.collection("users");
+      const sessions = dbClient.collection("sessions");
+
+      const allUsers = await users.find({}).limit(100).toArray();
+
+
+      const activeUsers = await Promise.all(allUsers.filter(async (user: any) => {
+        if (user.sessions.length === 0 ) return false;
+        await Promise.all(user.sessions.filter(async (session: any ) => {
+          const [currSession] = await sessions.find({sessionId: session.sessionId}).toArray();
+
+          console.log(currSession);
+
+          //const latestDate = new Date(latestPing), currDate = new Date();
+          //const diff = Math.ceil(Math.abs(((latestDate.getTime() - currDate.getTime()) / 1000) / 60));
+
+          //console.log(`from ${latestDate} to ${currDate} elapsed: ${diff}`);
+        }))
+      }));
+
+      res.status(200).send({});
+    }
+  )
+
   /*
     Create a new user with an Id.
     Activated represents wether their extension is activated.

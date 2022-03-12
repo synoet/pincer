@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
 
-const PREFIX = 'Davinci: ';
+const PREFIX = 'Pincer: ';
 
 export class StatusBar {
-    name: string = 'Davinci Completion';
+    name: string = 'Pincer';
     command: string = 'extension.inline-completion-settings';
-    text: string = 'Davinci: ✔️';
+    text: string = 'Pincer: ✔️';
     bar: any;
 
     constructor(){
@@ -15,6 +15,10 @@ export class StatusBar {
         this.bar.command = this.command;
         this.bar.name = 'Davinci Completion';
         this.bar.show();
+    }
+
+    clear(){
+      this.constructor();
     }
 
     showInProgress(language: string){

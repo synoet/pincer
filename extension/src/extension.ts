@@ -3,17 +3,21 @@ import * as config from './config';
 import {StatusBar} from './lib/status';
 import {Clock} from './lib/clock';
 import {Logger} from './lib/logger';
+import {includesCompletions, timeFromNow} from './lib/utils';
 import {ACTIVATED} from './config';
 import axios from 'axios';
 
-require('dotenv').config();
-
 export async function activate(context: vscode.ExtensionContext) {
-	const davinciOutput = vscode.window.createOutputChannel("Davinci");
-
   const status = new StatusBar();
   const clock = new Clock();
   const logger = new Logger();
+
+  const controller = new AbortController;
+
+  const abortCompletionRequest = () => {
+    controller.abort();
+    status.clear();
+  }
 
   await logger.initSession();
 
@@ -33,17 +37,20 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposable);
 
-	const handleGetCompletions = async( text: string, textContext: string, language: string): Promise<Array<string>> => {
+	const handleGetCompletions = async( textContext: string, language: string): Promise<Array<string>> => {
     status.showInProgress(language);
-
-    davinciOutput.appendLine(textContext);
 
     const completions = await axios.post(`${config.SERVER_URI}/complete`, {
       prompt: textContext,
       language: language,
-    })
-    .then((res)=>res.data.suggestions)
-    .catch(async (err) => {
+    },
+    {
+      signal: controller.signal
+    }
+    )
+    .then((res) => res.data.suggestions)
+    .catch(async (err: Error) => {
+        vscode.window.showErrorMessage(err.toString());
         await logger.error(`Failed to get completion (Extension-47)`);
     });
 
@@ -51,7 +58,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	};
 
 	const provider: vscode.InlineCompletionItemProvider<vscode.InlineCompletionItem> = {
-		provideInlineCompletionItems: async (document, position, context, token) => {
+		provideInlineCompletionItems: async (document, position) => {
+      abortCompletionRequest();
+
       currentDocument = document.getText(
         new vscode.Range(position.with(0, 0), position)
       );
@@ -62,13 +71,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
       if (localCounter < counter) return;
 
-      if (!(await logger.getLastDocumentTime())){
-        await logger.pushDocumentLog({document: currentDocument, timeStamp: new Date()})
-      } else {
-        let currTime = new Date(), lastTime = new Date(await logger.getLastDocumentTime());
-        if( (Math.ceil(Math.abs(((currTime.getTime() - lastTime.getTime()) / 1000) / 60))) > 1) {
-          await logger.pushDocumentLog({document: currentDocument, timeStamp: new Date()});
-        }
+      const lastTime = await logger.getLastDocumentTime();
+
+      if (!lastTime || (timeFromNow(lastTime) > 1)) {
+        await logger.pushDocumentLog({document: currentDocument, timeStamp: new Date()});
       }
 
       if (!ACTIVATED) return;
@@ -81,28 +87,20 @@ export async function activate(context: vscode.ExtensionContext) {
 				new vscode.Range(position.with(undefined, 0), position)
 			);
 
-			let textContext = '';
-			
-      textContext = document.getText(
+      let textContext = document.getText(
         new vscode.Range(position.with(0, 0), position)
       );
 
-			if (textContext != '') davinciOutput.appendLine("CONTEXT: \n" + textContext);
-
-			const suggestions: any = [];
-      let completions: any = [];
-
-      completions = await handleGetCompletions(
-        text,
+      let completions = await handleGetCompletions(
         textContext,
         document.languageId
-        ).catch(err => vscode.window.showErrorMessage(err.toString()));
+      ).catch(err => vscode.window.showErrorMessage(err.toString())) as Array<string>;
 
 			if (!completions) {
-        return [];
-      }
+        status.showEmpty(document.languageId)
+      };
 
-      recentCompletions.push(`${completions[0]}`);
+      recentCompletions.push(completions[0]);
 
        logger.addCompletionLog({
          input: text,
@@ -112,33 +110,25 @@ export async function activate(context: vscode.ExtensionContext) {
       })
 
       logger.pingSession();
-
       status.showSuccess();
 
-			for (let i = 0; i < completions.length; i++) {
-				suggestions.push({
-				text: text + completions[i],
-				trackingId: `Completion ${i}`,
-				range: new vscode.Range(position.with(undefined, 0), position)
-				})
-			}
-
-			return suggestions as any;
+      return completions.map((completion: string, idx: number) => ({
+        text: text + completion,
+        trackindId: `Completion ${idx}`,
+        range: new vscode.Range(position.with(undefined, 0), position),
+      })) as Array<vscode.InlineCompletionItem>;
 		},
 	};
 
 	vscode.languages.registerInlineCompletionItemProvider({ pattern: "**" }, provider);
 
-	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(async (e) => {
+	vscode.window.getInlineCompletionItemController(provider).onDidShowCompletionItem(async () => {
     clock.endTimer("timeFromKeystoke");
 
     await sleep();
 
-    if(currentDocument.split('\n').join('').includes(recentCompletions.pop().split('\n').join(''))) {
-      logger.setRecentLogAsTaken();
-    }
+    if(includesCompletions(currentDocument, recentCompletions)) logger.setRecentLogAsTaken();
 
-		davinciOutput.appendLine("Gave Inline Reccomendation");
     logger.takeClockReport(clock.report())
     logger.sendSessionLogs();
 	});
