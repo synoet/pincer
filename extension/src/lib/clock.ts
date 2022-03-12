@@ -14,8 +14,9 @@ class Timer implements Timer {
     this.name = name;
   }
 
-  calcTimeTaken(): Date{
-    return new Date(this.endTime).getTime() - new Date(this.startTime).getTime() as any;
+  calcTimeTaken(): Date {
+    return (new Date(this.endTime).getTime() -
+      new Date(this.startTime).getTime()) as any;
   }
 }
 
@@ -23,31 +24,31 @@ export interface Clock {
   timers: Array<Timer>;
 }
 
-export class Clock implements Clock{
-  constructor(){
+export class Clock implements Clock {
+  constructor() {
     this.timers = [];
   }
 
   private getTimer(name: string): Timer {
-    return this.timers.filter(timer => timer.name === name)[0];
+    return this.timers.filter((timer) => timer.name === name)[0];
   }
 
   clear(): void {
     this.timers = [];
   }
 
-  newTimer(name: string): {startTimer: () => void} {
+  newTimer(name: string): { startTimer: () => void } {
     const tempTimer = new Timer(name);
     this.timers.push(tempTimer);
 
-    return { startTimer: () => this.startTimer(name)};
+    return { startTimer: () => this.startTimer(name) };
   }
 
   startTimer(name: string): void {
     const time = new Date();
 
     const timer = this.getTimer(name);
-    
+
     if (!timer) return;
     timer.startTime = time;
   }
@@ -56,7 +57,7 @@ export class Clock implements Clock{
     const time = new Date();
 
     const timer = this.getTimer(name);
-    
+
     if (!timer) return;
     timer.endTime = time;
   }
@@ -69,5 +70,4 @@ export class Clock implements Clock{
       } as TimerReport;
     });
   }
-
 }
