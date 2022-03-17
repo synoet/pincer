@@ -3,7 +3,7 @@ import * as config from "./config";
 import { StatusBar } from "./lib/status";
 import { Clock } from "./lib/clock";
 import { Logger } from "./lib/logger";
-import { includesCompletions, timeFromNow } from "./lib/utils";
+import { includesCompletions, timeFromNow, tokenize, trimToTokens} from "./lib/utils";
 import { ACTIVATED } from "./config";
 import axios from "axios";
 
@@ -99,6 +99,10 @@ export async function activate(context: vscode.ExtensionContext) {
         let textContext = document.getText(
           new vscode.Range(position.with(0, 0), position)
         );
+
+        if (tokenize(textContext) > 1800){
+          textContext = trimToTokens(textContext, 1800);
+        }
 
         let completions = (await handleGetCompletions(
           textContext,
