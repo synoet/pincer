@@ -4,7 +4,7 @@ MAG='\033[0;35m'
 RESET='\033[0m'
 
 echo -e "${MAG} Installing Davinci Extension ... ${RESET}"
-code-insiders --install-extension davinci.vsix &> /dev/null
+code-insiders --install-extension pincer.vsix &> /dev/null
 
 for ((k = 0; k <= 20 ; k++))
 do
@@ -18,6 +18,6 @@ do
 done
 echo
 
-code-insiders --no-sandbox --enable-proposed-api nysteo.davinci
+code-insiders --no-sandbox --enable-proposed-api nysteo.pincer
 
 
