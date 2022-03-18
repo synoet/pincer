@@ -1,5 +1,4 @@
 # https://docs.linuxserver.io/images/docker-webtop
-
 ARG WEBTOP_TAG=ubuntu-xfce
 FROM lscr.io/linuxserver/webtop:$WEBTOP_TAG
 
@@ -10,6 +9,8 @@ ENV TZ=America/New_York \
     CUSTOM_PORT=5000
 
 COPY custom-cont-init.d /defaults/custom-cont-init.d
+
+COPY content.zip /var/lib/content.zip
 
 RUN set -ex; \
   apt update; \
@@ -24,6 +25,7 @@ RUN set -ex; \
   echo "mv /defaults/custom-cont-init.d/* /home/anubis/custom-cont-init.d/" >> /etc/cont-init.d/90-custom-folders; \
   apt install; \
   apt-get update; \
+  apt-get install unzip; \
   wget -O code-insiders.deb https://az764295.vo.msecnd.net/insider/b7730c807c1e0fdacdcc91a854bb963715b2a89b/code-insiders_1.65.0-1646060513_amd64.deb; \
   echo 'Y' | apt install ./code-insiders.deb; \
   git clone https://github.com/synoet/Pincer; \
