@@ -16,6 +16,8 @@ unzip content.zip
 rm -rf content.zip
 popd
 
+chown -c -R abc:abc /home/anubis/study_content
+
 mkdir /home/anubis/.config/autostart
 
 mv /home/anubis/custom-cont-init.d/code.desktop /home/anubis/.config/autostart/

@@ -10,7 +10,7 @@ ENV TZ=America/New_York \
 
 COPY custom-cont-init.d /defaults/custom-cont-init.d
 
-COPY content.zip /var/lib/content.zip
+COPY study_content.zip /var/lib/content.zip
 
 RUN set -ex; \
   apt update; \
