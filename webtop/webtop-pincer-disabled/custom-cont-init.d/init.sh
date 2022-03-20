@@ -6,7 +6,7 @@ then
   # install extension from .vsix file
   pushd /var/lib/Pincer/bin
   chmod +x ./setuprawdisabled.sh
-  su abc -c './setupraw.sh'
+  su abc -c './setuprawdisabled.sh'
   popd
 fi
 
