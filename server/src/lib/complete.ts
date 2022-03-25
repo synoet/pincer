@@ -14,7 +14,7 @@ export const complete = async (
 
   const suggestions = await axios
     .post(
-      "https://api.openai.com/v1/engines/davinci-codex/completions",
+      "https://api.openai.com/v1/engines/code-cushman-001/completions",
       {
         prompt: prompt,
         max_tokens: 64,
