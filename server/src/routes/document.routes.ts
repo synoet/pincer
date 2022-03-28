@@ -32,6 +32,25 @@ export default async (app: Router) => {
     res.status(201).send({ message: "Success!" });
   });
 
+  app.get("/v2/document/:userId", async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const users = dbClient.collection("users");
+    const documents = dbClient.collection("documents");
+
+    const { sessions: userSessions } = await users.findOne({ userId: userId });
+
+    if (userSessions.length === 0) {
+      res.status(404).send({ message: "No sessions found" });
+      return;
+    }
+
+    const sessionDocuments = await documents.find({
+      sessionId: { $in: userSessions },
+    }).toArray();
+
+    res.status(200).send(sessionDocuments);
+  });
+
   /*
     Get timestamp of last document
   */
