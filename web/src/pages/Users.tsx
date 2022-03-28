@@ -26,9 +26,9 @@ export default function Users(){
           <div className="flex flex-col gap-4">
             {users.map((user: any) => {
               return (
-                <div onClick={() => history.push(`/sessions?userId=${user._id}`)} key={`${user._id}`} 
+                <div onClick={() => history.push(`/sessions?userId=${user.userId}`)} key={`${user.userId}`} 
                   className='flex w-full cursor-pointer hover:border-gray-100 rounded-sm border bg-gray-400 border-gray-300 p-4 justify-between text-white'>
-                  <p>{user._id}</p>
+                  <p>{user.userId}</p>
                   <p>{user.sessions.length} Sessions</p>
                   <p>
                     {user.activated ? (
