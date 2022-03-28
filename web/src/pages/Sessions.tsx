@@ -27,7 +27,11 @@ export default function Sessions(){
     axios.get(`${serverurl}/document/${userId}`)
       .then((res) => {
         if(res.data){
-          setDocuments(res.data.reverse());
+          let docs = res.data.sort((a: any, b: any) => {
+            let aTime = new Date(a.timeStamp); let bTime = new Date(b.timeStamp);
+            return bTime.getTime() - aTime.getTime();
+          });
+          setDocuments(docs.reverse());
         }
       })
   }, [userId]);
@@ -64,7 +68,7 @@ export default function Sessions(){
           <div className="flex flex-col gap-4">
             {documents.map((document: any) => {
               return (
-                <div onClick={() => history.push(`/document?documentId=${document.documentId}`)} key={`${document.documentId}`} 
+                <div key={`${document.documentId}`} 
                   className='flex  flex-col w-full bg-gray-400 cursor-pointer hover:border-gray-100 rounded-sm border border-gray-300 p-4 justify-between text-white'>
                   <p>{document.timeStamp}</p>
                   <SyntaxHighlighter language={'c'} style={gruvboxDark}>
