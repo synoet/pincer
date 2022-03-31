@@ -42,19 +42,22 @@ export default function Home() {
         if (res.data) {
           setSessionStats(res.data);
         }
-      });
+      })
+      .catch((err) => console.log(err))
     axios.get(`${serverurl}/users/stats`)
       .then((res) => {
         if (res.data) {
           setUserStats(res.data);
         }
-      });
+      })
+      .catch((err) => console.log(err))
     axios.get(`${serverurl}/logs/stats`)
       .then((res) => {
         if (res.data) {
           setLogStats(res.data);
         }
-      });
+      })
+      .catch((err) => console.log(err));
   }, []);
 
   // session  & log data for chart

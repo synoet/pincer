@@ -15,7 +15,7 @@ export default function Users(){
         if (res.data){
           setUsers(res.data.reverse());
         }
-      });
+      }).catch((err) => console.log(err));
   }, [])
   
   return (

@@ -8,8 +8,8 @@ import gruvboxDark from 'react-syntax-highlighter/dist/esm/styles/hljs/gruvbox-d
 import Layout from '../components/Layout';
 
 export default function Sessions(){
-  const [sessions, setSessions] = useState<any>();
-  const [documents, setDocuments] = useState<any>();
+  const [sessions, setSessions] = useState<any>(undefined);
+  const [documents, setDocuments] = useState<any>(undefined);
   const search = useLocation().search
   const userId = new URLSearchParams(search).get('userId');
   const history = useHistory();
@@ -20,9 +20,9 @@ export default function Sessions(){
     axios.get(`${serverurl}/session/user/${userId}`)
       .then((res) => {
         if(res.data){
-          setSessions(res.data);
+          setSessions(res.data.filter((session: any) => session));
         }
-      })
+      }).catch((err) => console.log(err));
 
     axios.get(`${serverurl}/document/${userId}`)
       .then((res) => {
@@ -33,7 +33,7 @@ export default function Sessions(){
           });
           setDocuments(docs.reverse());
         }
-      })
+      }).catch((err) => console.log(err));
   }, [userId]);
 
   useEffect(() => {
@@ -41,10 +41,10 @@ export default function Sessions(){
     axios.get(`${serverurl}/sessions`)
       .then((res) => {
         if (res.data){
-          setSessions(res.data.filter((session: any) => session.id));
+          setSessions(res.data);
         }
       });
-  }, [userId])
+  }, [])
   
   return (
     <Layout>
@@ -65,8 +65,8 @@ export default function Sessions(){
             )}
           </div>
         )}
-        <h1 className="text-white text-2xl mt-8 font-bold"> Document History </h1>
-        {documents && (
+        {userId && documents && <h1 className="text-white text-2xl mt-8 font-bold"> Document History </h1>}
+        {userId && documents && (
           <div className="flex flex-col gap-4">
             {documents.map((document: any) => {
               return (

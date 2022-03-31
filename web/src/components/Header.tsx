@@ -23,9 +23,6 @@ export default function Header(){
           <p 
             className="text-slate-300 hover:text-slate-200 cursor-pointer"
             onClick={() => history.push('/sessions')}> Sessions </p>
-          <p 
-            className="text-slate-300 hover:text-slate-200 cursor-pointer"
-            onClick={() => history.push('/failures')}> Failures </p>
         </div>
       </div>
     </div>
