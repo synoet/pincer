@@ -41,7 +41,7 @@ export default function Sessions(){
     axios.get(`${serverurl}/sessions`)
       .then((res) => {
         if (res.data){
-          setSessions(res.data);
+          setSessions(res.data.filter((session: any) => session.id));
         }
       });
   }, [userId])
@@ -57,10 +57,12 @@ export default function Sessions(){
               return (
                 <div onClick={() => history.push(`/session?sessionId=${session?.sessionId}`)} key={`${session?.sessionId}`} 
                   className='flex w-full bg-gray-400 cursor-pointer hover:border-gray-100 rounded-sm border border-gray-300 p-4 justify-between text-white'>
-                  <p>{session?.sessionId}</p>
+                  <p>{session.sessionId}</p>
                   <p>{session && getRelative(session.startTime, session.latestPing)} minutes</p>
                 </div>
-            )})}
+              )
+            }
+            )}
           </div>
         )}
         <h1 className="text-white text-2xl mt-8 font-bold"> Document History </h1>
