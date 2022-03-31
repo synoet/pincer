@@ -118,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext) {
         recentCompletions.push(completions[0]);
 
         logger.addCompletionLog({
-          input: text,
+          input: textContext,
           language: document.languageId,
           suggestion: completions[0],
           taken: false,
