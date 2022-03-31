@@ -68,7 +68,7 @@ export async function activate(context: vscode.ExtensionContext) {
       provideInlineCompletionItems: async (document, position) => {
 
         currentDocument = document.getText(
-          new vscode.Range(position.with(0, 0), position)
+          new vscode.Range(position.with(0, 0), position.with(document.lineCount - 1))
         );
 
         counter++;
