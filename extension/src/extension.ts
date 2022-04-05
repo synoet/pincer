@@ -81,6 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         if (!lastTime || timeFromNow(lastTime) > 1) {
           await logger.pushDocumentLog({
+            fileName: document.fileName,
             document: currentDocument,
             timeStamp: new Date(),
           });

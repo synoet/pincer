@@ -14,6 +14,7 @@ interface CompletionLog {
 
 interface DocumentLog {
   document: string;
+  fileName: string;
   sessionId?: string;
   timeStamp: Date;
 }
