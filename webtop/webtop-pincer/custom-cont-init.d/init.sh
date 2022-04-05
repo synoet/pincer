@@ -26,6 +26,11 @@ then
   popd
 
   chown -c -R abc:abc /home/anubis/study_content
+
+  # always be in the study content folder when you open bash
+  pushd /home/anubis
+  echo "cd /home/anubis/study_content" >> .bashrc
+  popd
 fi
 
 if [[ ! -d /home/anubis/.config/autostart ]]
