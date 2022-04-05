@@ -72,7 +72,10 @@ export default function Sessions(){
               return (
                 <div key={`${document.documentId}`} 
                   className='flex  flex-col w-full bg-gray-400 cursor-pointer hover:border-gray-100 rounded-sm border border-gray-300 p-4 justify-between text-white'>
-                  <p>{document.timeStamp}</p>
+                  <div className="flex p-2 justify-between">
+                    <p>Time Stamp: {document.timeStamp}</p>
+                    <p>File: {document?.fileName}</p>
+                  </div> 
                   <SyntaxHighlighter language={'c'} style={gruvboxDark}>
                     {document.document}
                   </SyntaxHighlighter>
