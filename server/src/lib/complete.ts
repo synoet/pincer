@@ -18,7 +18,7 @@ export const complete = async (
       {
         prompt: prompt,
         max_tokens: 64,
-        temperature: 0.13,
+        temperature: 0.6,
         top_p: 1,
         stream: false,
         stop: ["function", "line"],
