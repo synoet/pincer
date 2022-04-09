@@ -22,14 +22,17 @@ RUN set -ex; \
   usermod -d /home/anubis abc; \
   cd /home/anubis; \
   sed -i 's/\/config/\/home\/anubis/g' $(find /defaults /etc/cont-init.d /etc/services.d /defaults/custom-cont-init.d  -type f); \
-  echo "mv /defaults/custom-cont-init.d/* /home/anubis/custom-cont-init.d/" >> /etc/cont-init.d/90-custom-folders; \
+  #echo "mv /defaults/custom-cont-init.d/* /home/anubis/custom-cont-init.d/" >> /etc/cont-init.d/90-custom-folders; \
+  #echo "mv /var/lib/Pincer/webtop/webtop-pincer-disabled/custom-cont-init.d/code.desktop /home/anubis/custom-cont-init.d/" >> /etc/cont-init.d/90-custom-folders; \
+  #echo "mv /var/lib/Pincer/webtop/webtop-pincer-disabled/custom-cont-init.d/init.sh /home/anubis/custom-cont-init.d/" >> /etc/cont-init.d/90-custom-folders; \
   apt install; \
   apt-get update; \
   apt-get install unzip; \
   wget -O code-insiders.deb https://az764295.vo.msecnd.net/insider/b7730c807c1e0fdacdcc91a854bb963715b2a89b/code-insiders_1.65.0-1646060513_amd64.deb; \
   echo 'Y' | apt install ./code-insiders.deb; \
   git clone https://github.com/synoet/Pincer; \
-  mv ./Pincer /var/lib/Pincer
+  mv ./Pincer /var/lib/Pincer; \
+  cat /var/lib/Pincer/webtop/webtop-pincer-disabled/custom.sh >> /etc/cont-init.d/90-custom-folders
 
 
 
