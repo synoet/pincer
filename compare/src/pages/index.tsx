@@ -36,7 +36,7 @@ const Home: NextPage = () => {
       <pre
         style={{ display: "inline" }}
         dangerouslySetInnerHTML={{
-          __html: Prism.highlight(str || "", Prism.languages.clike, "clike"),
+          __html: Prism.highlight(str || "", Prism.languages.clike as any, "clike"),
         }}
       />
     );
@@ -47,10 +47,11 @@ const Home: NextPage = () => {
   }, [lowerInterval, selectedFunction]);
 
   useEffect(() => {
+    console.log(data)
     if (data){
       console.log(data.functions);
       setSelectedFunction(data.functions[1].name);
-      data.functions[lowerInterval].forEach((func, index) => {
+      data.functions[lowerInterval].forEach((func: any, index: number) => {
         if (func.name === selectedFunctionName) {
           setSelectedFunction(index);
         }
@@ -61,17 +62,9 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     if (data){
-      console.log(data.functions)
-      let maxLength = 0;
-      let maxIndex = 0;
-      for (let i = 0; i < data.functions.length; i++) {
-        if (data.functions[i].length > maxLength) {
-          maxIndex = i;
-        }
-      }
 
-      let functionNames = data.functions[maxIndex];
-      functionNames = functionNames.map(func => func.name);
+
+      const functionNames = data.functions[0].map((func: any) => func.name);
       console.log(functionNames);
       setFunctionOptions(functionNames);
     }
@@ -80,6 +73,7 @@ const Home: NextPage = () => {
 
 
   const getSelectedFunctionIndex = (name: string): any => {
+    if (!data) return null;
     for (let i = 0; i < data.functions[lowerInterval].length; i++) {
       if (data.functions[lowerInterval][i].name === name) {
         console.log(i)
@@ -108,6 +102,7 @@ const Home: NextPage = () => {
 
               return (
                 <div
+                  key={func}
                   className="w-full text-white p-4 bg-lighter-background/70 rounded-sm cursor-pointer hover:bg-lighter-background/50"
                   onClick={() => {
                     setSelectedFunction(getSelectedFunctionIndex(func))
@@ -122,7 +117,7 @@ const Home: NextPage = () => {
 
           <div className="flex flex-col items-center justify-start space-y-2 overflow-auto w-[350px] p-4 space-y-4">
             <h1 className="font-bold text-white">Intervals</h1>
-            {data.timestamps.map((_, index) => {
+            {data.timestamps.map((_: any, index: number) => {
               let leftTimestamp = new Date(
                 data.timestamps[index]
               ).toLocaleTimeString();
@@ -148,6 +143,7 @@ const Home: NextPage = () => {
               if (index >= data.functions.length -1 || selectedFunction >= data.functions[index].length -1 || selectedFunction >= data.functions[index + 1].length -1) {
                 return (<></>)
               }
+
               if (data.functions[index][selectedFunction].content !== data.functions[index + 1][selectedFunction].content) {
                 return (
                   <div
@@ -170,7 +166,6 @@ const Home: NextPage = () => {
           </div>
 
 
-
           <div className="w-full overflow-auto language-css">
             {data.functions[lowerInterval][selectedFunction].content && data.functions[upperInterval][selectedFunction].content && (
               <ReactDiffViewer
@@ -185,7 +180,7 @@ const Home: NextPage = () => {
               />
               )}
           </div>
-          <div className="flex flex-col items-center justify-start space-y-2 overflow-auto w-[500px] space-y-4 pt-4 pl-4 pr-4">
+          <div className="flex flex-col items-center justify-start space-y-2 overflow-auto w-[700px] space-y-4 pt-4 pl-4 pr-4">
             <h1 className="font-bold text-white">Suggestions</h1>
             {suggestionDataLoading && (
               <p className="text-lg text-white">Loading...</p>
@@ -199,7 +194,7 @@ const Home: NextPage = () => {
               suggestionData &&
               suggestionData.suggestions.map((suggestion: any) => {
                 return (
-                  <div className="text-white p-4 bg-lighter-background/70 rounded-sm cursor-pointer hover:bg-lighter-background/50 w-full text-sm">
+                  <div key={suggestion} className="text-white p-4 bg-lighter-background/70 rounded-sm cursor-pointer hover:bg-lighter-background/50 w-full text-sm">
                     <p>{HighLightSyntax(suggestion.suggestion)}</p>
                   </div>
                 );

@@ -52,7 +52,7 @@ export const suggestionsRouter = createRouter().query("getSuggestions", {
 
 
     return {
-      suggestions: userSuggestions.filter((suggestion) => suggestion && suggestion.suggestion !== "")
+      suggestions: userSuggestions.filter((suggestion: any) => suggestion && suggestion.suggestion !== "")
     };
   },
 });
