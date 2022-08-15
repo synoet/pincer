@@ -12,6 +12,7 @@ const UserPage: NextPage = ({userId}: any) => {
   const [selectedFunction, setSelectedFunction] = useState(0)
   const [selectedFunctionName, setSelectedFunctionName] = useState("list_init")
   const [functionOptions, setFunctionOptions] = useState([])
+  const [selectedSuggestion, setSelectedSuggestion] = useState(undefined)
 
   const { data, isLoading } = trpc.useQuery([
     "documents.getDocuments",
@@ -173,6 +174,7 @@ const UserPage: NextPage = ({userId}: any) => {
                 rightTitle={data.functions[upperInterval][selectedFunction].name}
                 oldValue={data.functions[lowerInterval][selectedFunction].content}
                 newValue={data.functions[upperInterval][selectedFunction].content}
+                highlightLines={[0, 1,2 ]}
                 renderContent={HighLightSyntax}
                 useDarkTheme={true}
                 showDiffOnly={false}
@@ -180,7 +182,7 @@ const UserPage: NextPage = ({userId}: any) => {
               />
             )}
           </div>
-          <div className="flex flex-col items-center justify-start space-y-2 overflow-auto w-[700px] space-y-4 pt-4 pl-4 pr-4">
+          <div className="flex flex-col items-center justify-start space-y-2 overflow-auto w-[1000px] space-y-4 pt-4 pl-4 pr-4">
             <h1 className="font-bold text-white">Suggestions</h1>
             {suggestionDataLoading && (
               <p className="text-lg text-white">Loading...</p>
@@ -193,9 +195,24 @@ const UserPage: NextPage = ({userId}: any) => {
             {!suggestionDataLoading &&
               suggestionData &&
               suggestionData.suggestions.map((suggestion: any) => {
+                let range = suggestion.input.split("\n").length - data.functions[upperInterval][selectedFunction].startLine
+
+                if (range < 0){
+                  return <></>
+                }
                 return (
-                  <div key={suggestion} className="text-white p-4 bg-lighter-background/70 rounded-sm cursor-pointer hover:bg-lighter-background/50 w-full text-sm">
+                  <div
+                    onClick={() => setSelectedSuggestion(suggestion.suggestion.split("\n"))}
+                    key={suggestion} className="text-white p-4 bg-lighter-background/70 rounded-sm cursor-pointer hover:bg-lighter-background/50 w-full text-sm">
                     <p>{HighLightSyntax(suggestion.suggestion)}</p>
+                    <br/>
+                    <ReactDiffViewer
+                      newValue={data.functions[upperInterval][selectedFunction].content.split("\n").splice(range, suggestion.suggestion.split("\n").length).join("\n")}
+                      oldValue={suggestion.suggestion}
+                      splitView={false}
+                      useDarkTheme={true}
+                      renderContent={HighLightSyntax}
+                    />
                   </div>
                 );
               })}
