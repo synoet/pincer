@@ -174,7 +174,6 @@ const UserPage: NextPage = ({userId}: any) => {
                 rightTitle={data.functions[upperInterval][selectedFunction].name}
                 oldValue={data.functions[lowerInterval][selectedFunction].content}
                 newValue={data.functions[upperInterval][selectedFunction].content}
-                highlightLines={[0, 1,2 ]}
                 renderContent={HighLightSyntax}
                 useDarkTheme={true}
                 showDiffOnly={false}
