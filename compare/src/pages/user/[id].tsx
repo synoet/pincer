@@ -140,11 +140,6 @@ const UserPage: NextPage = ({userId}: any) => {
               }
 
 
-              if (index >= data.functions.length -1 || selectedFunction >= data.functions[index].length -1 || selectedFunction >= data.functions[index + 1].length -1) {
-                return (<></>)
-              }
-
-              if (data.functions[index][selectedFunction].content !== data.functions[index + 1][selectedFunction].content) {
                 return (
                   <div
                     onClick={() => {
@@ -157,11 +152,6 @@ const UserPage: NextPage = ({userId}: any) => {
                   </div>
                 )
 
-              }
-              return (
-                <></>
-
-              );
             })}
           </div>
 
