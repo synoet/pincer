@@ -45,10 +45,9 @@ const UserPage: NextPage = ({userId}: any) => {
 
   useEffect(() => {
     utils.invalidateQueries(["suggestions.getSuggestions"]);
-  }, [lowerInterval, selectedFunction]);
+  }, [lowerInterval]);
 
   useEffect(() => {
-    console.log(data)
     if (data){
       console.log(data.functions);
       setSelectedFunction(data.functions[1].name);
