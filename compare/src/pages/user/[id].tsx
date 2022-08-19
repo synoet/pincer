@@ -142,6 +142,7 @@ const UserPage: NextPage = ({userId}: any) => {
 
                 return (
                   <div
+                    key={index}
                     onClick={() => {
                       setLowerInterval(index);
                       setUpperInterval(index + 1);
