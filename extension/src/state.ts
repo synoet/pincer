@@ -1,9 +1,11 @@
+import {User} from './user';
 interface ExtensionState {
   changeLog: DocumentChange[];
   unsavedChanges: DocumentChange[];
   saveLog: number[];
   completions: Completion[];
   events: number[];
+  user: User | undefined;
 }
 
 interface DocumentChange {
@@ -25,9 +27,12 @@ interface Completion {
 
 
 class ExtensionState implements ExtensionState {
+  user: User | undefined = undefined 
   changeLog: DocumentChange[] = [];
   unsavedChanges: DocumentChange[] = [];
   saveLog: number[] = [];
+  completions: Completion[] = [];
+  events: number[] = [];
 
   addDocumentEvent(document: DocumentChange) {
     this.changeLog.push(document);

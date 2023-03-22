@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import axios from 'axios';
 import { ExtensionState, DocumentChange, Completion } from './state';
+import { getOrCreateUser } from './user';
 import { getCompletion, syncCompletion} from './completion'; 
 import {v4 as uuid} from 'uuid';
 
@@ -9,6 +9,10 @@ let state: ExtensionState  = new ExtensionState();
 export function activate(_: vscode.ExtensionContext) {
 	const provider: vscode.InlineCompletionItemProvider = {
 		async provideInlineCompletionItems(document, position, context, token) {
+      if (!state.user) {
+        state.user = await getOrCreateUser();
+      }
+
       let shouldGetCompletion: boolean = state.shouldGetCompletion();
       let completion: Completion | undefined = undefined;
 
@@ -69,6 +73,7 @@ export function activate(_: vscode.ExtensionContext) {
         return;
       }
 
+      // update the completion and mark it as accepted
       syncCompletion(completion)
     }
 	};
