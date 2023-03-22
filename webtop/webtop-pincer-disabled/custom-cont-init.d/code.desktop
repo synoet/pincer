@@ -1,7 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Name=x11vnc
-Comment=x11vnc Server
-Exec=code-insiders ./study_content --no-sandbox --enable-proposed-api synoet.pincer --fullscreen
-Terminal=true
-Type=Application
