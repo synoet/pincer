@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { ExtensionState, DocumentChange, Completion } from './state';
-import { getOrCreateUser } from './user';
+import { ExtensionState } from './state';
+import {DocumentChange, Completion} from 'shared';
+import { getOrCreateUser, initializeUser} from './user';
 import { getCompletion, syncCompletion} from './completion'; 
 import {v4 as uuid} from 'uuid';
 
@@ -11,6 +12,7 @@ export function activate(_: vscode.ExtensionContext) {
 		async provideInlineCompletionItems(document, position, context, token) {
       if (!state.user) {
         state.user = await getOrCreateUser();
+        initializeUser(state.user.id);
       }
 
       let shouldGetCompletion: boolean = state.shouldGetCompletion();
@@ -44,7 +46,11 @@ export function activate(_: vscode.ExtensionContext) {
 
       if (!shouldGetCompletion) return [];
 
-      completion = await getCompletion(currentContext);
+      completion = await getCompletion(
+        currentContext,
+        document.getText(),
+        document.fileName.split('.').pop() || "",
+      );
 
       if (!completion) {
         console.warn('completion is undefined');
@@ -53,12 +59,13 @@ export function activate(_: vscode.ExtensionContext) {
 
       // store the completion in the logs
       state.addCompletion(completion);
-      syncCompletion(completion);
+      syncCompletion(completion, state.user);
 
 			return [
         {
           insertText: completion.completion,
           range: new vscode.Range(position.with(undefined, 0), position),
+          trackingId: completion.completion,
         } as vscode.InlineCompletionItem
       ];
 
@@ -74,7 +81,12 @@ export function activate(_: vscode.ExtensionContext) {
       }
 
       // update the completion and mark it as accepted
-      syncCompletion(completion)
+      if (!state.user) {
+        console.error('user is undefined');
+        return;
+      }
+
+      syncCompletion(completion, state.user)
     }
 	};
 

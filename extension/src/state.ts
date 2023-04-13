@@ -1,4 +1,6 @@
-import {User} from './user';
+import axios from 'axios';
+import {DocumentChange, User, Completion} from 'shared'
+
 interface ExtensionState {
   changeLog: DocumentChange[];
   unsavedChanges: DocumentChange[];
@@ -7,24 +9,6 @@ interface ExtensionState {
   events: number[];
   user: User | undefined;
 }
-
-interface DocumentChange {
-  id: string;
-  content: string;
-  filePath: string;
-  timestamp: number;
-}
-
-interface Completion {
-  id: string;
-  completion: string;
-  timestamp: number;
-  input: string;
-  accepted: boolean;
-  acceptedTimestamp: number;
-  language: string;
-}
-
 
 class ExtensionState implements ExtensionState {
   user: User | undefined = undefined 
@@ -52,10 +36,21 @@ class ExtensionState implements ExtensionState {
     return false;
   }
 
-  sync() {
+  async sync() {
+    return axios.post('http://localhost:8000/sync/documents', {documents: this.unsavedChanges, user: this.user})
+      .then((_) => {
+        this.unsavedChanges = [];
+        return;
+      })
+      .catch((error) => {
+        console.log(error);
+        return;
+      });
+
   }
 
   shouldGetCompletion(): boolean {
+    return true;
     if (Date.now() - this.events[this.events.length - 1] > 3600) {
       return true;
     }

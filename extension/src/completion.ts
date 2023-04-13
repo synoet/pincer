@@ -1,32 +1,24 @@
 import axios from 'axios';
 import {v4 as uuid} from 'uuid';
-import {Completion} from './state';
+import {Completion, User} from 'shared';
 
-export async function getCompletion(input: string): Promise<Completion | undefined> {
-  return axios.post('http://localhost:8000/completion', input)
-    .then((response) => {
-      return {
-        id: uuid(), 
-        completion: response.data.completion,
-        timestamp: Date.now(),
-        input: input,
-        accepted: false,
-      };
-    })
-    .catch((error) => {
-      console.log(error);
-      return undefined;
-    });
+export async function getCompletion(input: string, context: string, fileExtension: string): Promise<Completion | undefined> {
+  const response = await axios.post('http://localhost:8000/completion', {prompt: input, context: context, fileExtension: fileExtension})
 
+  if (response.status === 200) {
+    return {
+      id: uuid(),
+      completion: response.data.completion,
+      timestamp: Date.now(),
+      input: input,
+      accepted: false,
+      language: 'en',
+    }
+  }
+
+  return undefined;
 }
 
-export async function syncCompletion(completion: Completion): Promise<void> {
-  return axios.post('http://localhost:8000/sync/completion', completion)
-    .then((_) => {
-      return;
-    })
-    .catch((error) => {
-      console.log(error);
-      return;
-    });
+export async function syncCompletion(completion: Completion, user: User): Promise<void> {
+  axios.post('http://localhost:8000/sync/completion', {completion: completion, user: user})
 }

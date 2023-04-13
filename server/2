@@ -52,15 +52,11 @@ app.post("/user", async (req: UserRequest, res) => {
 interface CompletionRequest extends Request {
   body: {
     prompt: string;
-    context: string;
-    fileExtension: string;
   }
 }
 
 interface CompletionResponse {
   completion: string;
-  context: string;
-  fileExtension: string;
 }
 
 app.post('/completion', async (req: CompletionRequest , res) => {
@@ -69,14 +65,18 @@ app.post('/completion', async (req: CompletionRequest , res) => {
   const openai = new OpenAIApi(configuration);
 
   const response = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+    model: "code-cushman-002",
     messages: [
-      {role: "system", content: "you are to complete the given code snippet, given the following context pulled from the file. PLEASE ONLY RETURN VALID CODE FOR THE LANGUAGE OF THE FILE EXTENSION.\n file extension: " + req.body.fileExtension + "\n context: " + req.body.context + "\n \n\n"},
+      {role: "system", content: "you are to complete the given code snippet, given the following context pulled from the file. YOU ARE TO ONLY RETURN A CODE COMPLETION."},
       {role: "user", content: prompt}
     ],
+    temperature: 0.7,
+    max_tokens: 124,
+    frequency_penalty: 0,
+    presence_penalty: 0,
   });
 
-  const completion: string | undefined = response.data.choices[0].message?.content;
+  const completion: string | undefined = response.data.choices[0].text;
 
   if (!completion) {
     console.warn("was not able to generate a completion");
@@ -141,7 +141,7 @@ app.post('/sync/completion', async (req: CompletionSyncRequest, res) => {
         completion: completion.completion,
         accepted: completion.accepted,
         language: completion.language,
-        acceptedTimestamp: completion.acceptedTimestamp,
+        accepted_timestamp: completion.acceptedTimestamp,
         userId: user.id,
       })
       .eq('id', completion.id)
@@ -160,7 +160,7 @@ app.post('/sync/completion', async (req: CompletionSyncRequest, res) => {
           completion: completion.completion,
           accepted: completion.accepted,
           language: completion.language,
-          acceptedTimestamp: completion.acceptedTimestamp,
+          accepted_timestamp: completion.acceptedTimestamp,
           input: completion.input,
           userId: user.id,
         },

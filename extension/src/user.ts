@@ -1,11 +1,10 @@
+import axios from 'axios';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import {v4 as uuid} from 'uuid';
-
-export interface User {
-  id: string;
-}
+import {User} from 'shared';
+import { parse } from 'path';
 
 export function getOrCreateUser(): Promise<User> {
   const configPath: string  = path.join(os.homedir(), '.pincer.conf');
@@ -32,4 +31,8 @@ export function getOrCreateUser(): Promise<User> {
       }
     });
   });
+}
+
+export async function initializeUser(id: string): Promise<void> {
+  axios.post("http://localhost:8000/user", {id: id})
 }
