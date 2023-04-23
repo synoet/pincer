@@ -186,6 +186,9 @@ app.post("/log", async (req, res) => {
   res.status(200).send('ok');
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).send('ok');
+});
 
 app.listen(8000, () => {
   console.log('Server started on port 8000');
