@@ -68,15 +68,12 @@ app.post('/completion', async (req: CompletionRequest , res) => {
 
   const openai = new OpenAIApi(configuration);
 
-  const response = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
-    messages: [
-      {role: "system", content: "you are to complete the given code snippet, given the following context pulled from the file. PLEASE ONLY RETURN VALID CODE FOR THE LANGUAGE OF THE FILE EXTENSION.\n file extension: " + req.body.fileExtension + "\n context: " + req.body.context + "\n \n\n"},
-      {role: "user", content: prompt}
-    ],
+  const response = await openai.createCompletion({
+    model: "text-davinci-003",
+    prompt: "complete the following code snippet" + prompt,
   });
 
-  const completion: string | undefined = response.data.choices[0].message?.content;
+  const completion: string | undefined = response.data.choices[0].text;
 
   if (!completion) {
     console.warn("was not able to generate a completion");
@@ -171,6 +168,19 @@ app.post('/sync/completion', async (req: CompletionSyncRequest, res) => {
       return res.status(500).send()
     }
 
+  }
+
+  res.status(200).send('ok');
+});
+
+app.post("/log", async (req, res) => {
+  const { body: { data, level} } = req;
+  if (level === 'error') {
+    console.error(data);
+  } else if (level === 'warn') {
+    console.warn(data);
+  } else {
+    console.info(data);
   }
 
   res.status(200).send('ok');

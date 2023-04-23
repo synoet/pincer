@@ -4,8 +4,11 @@ import {DocumentChange, Completion} from 'shared';
 import { getOrCreateUser, initializeUser} from './user';
 import { getCompletion, syncCompletion} from './completion'; 
 import {v4 as uuid} from 'uuid';
+import { Logger } from './logging';
 
 let state: ExtensionState  = new ExtensionState();
+const logger = new Logger();
+
 
 export function activate(_: vscode.ExtensionContext) {
 	const provider: vscode.InlineCompletionItemProvider = {
@@ -15,9 +18,11 @@ export function activate(_: vscode.ExtensionContext) {
         initializeUser(state.user.id);
       }
 
+      logger.info(`user id: ${state.user.id}`);
+
+
       let shouldGetCompletion: boolean = state.shouldGetCompletion();
       let completion: Completion | undefined = undefined;
-
 
       // the current state of the document
       let documentChange: DocumentChange = {
@@ -53,7 +58,7 @@ export function activate(_: vscode.ExtensionContext) {
       );
 
       if (!completion) {
-        console.warn('completion is undefined');
+        logger.warn("completion is undefined");
         return [];
       }
 
@@ -61,14 +66,19 @@ export function activate(_: vscode.ExtensionContext) {
       state.addCompletion(completion);
       syncCompletion(completion, state.user);
 
-			return [
-        {
-          insertText: completion.completion,
-          range: new vscode.Range(position.with(undefined, 0), position),
-          trackingId: completion.completion,
-        } as vscode.InlineCompletionItem
-      ];
+      const result: vscode.InlineCompletionList = {
+				items: [
+          {
+            insertText: completion.completion,
+            range: new vscode.Range(position.line, position.character, position.line, position.character + completion.completion.length),
+          }
+        ],
+				commands: [],
+			};
 
+
+
+			return result;
 		},
 
     handleDidPartiallyAcceptCompletionItem(completionItem: vscode.InlineCompletionItem) {
@@ -76,13 +86,13 @@ export function activate(_: vscode.ExtensionContext) {
       const completion = state.setCompletionAsTaken(completionItem.insertText as string);
 
       if (!completion) {
-        console.warn('completion is undefined, was not able to mark as accepted');
+        logger.warn("completion is undefined");
         return;
       }
 
       // update the completion and mark it as accepted
       if (!state.user) {
-        console.error('user is undefined');
+        logger.error("user is undefined");
         return;
       }
 
