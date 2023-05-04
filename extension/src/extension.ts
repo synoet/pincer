@@ -4,10 +4,8 @@ import {DocumentChange, Completion} from 'shared';
 import { getOrCreateUser, initializeUser} from './user';
 import { getCompletion, syncCompletion} from './completion'; 
 import {v4 as uuid} from 'uuid';
-import { Logger } from './logging';
 
 let state: ExtensionState  = new ExtensionState();
-const logger = new Logger();
 
 
 export function activate(_: vscode.ExtensionContext) {
@@ -17,9 +15,6 @@ export function activate(_: vscode.ExtensionContext) {
         state.user = await getOrCreateUser();
         initializeUser(state.user.id);
       }
-
-      logger.info(`user id: ${state.user.id}`);
-
 
       let shouldGetCompletion: boolean = state.shouldGetCompletion();
       let completion: Completion | undefined = undefined;
@@ -44,11 +39,6 @@ export function activate(_: vscode.ExtensionContext) {
 
       state.addDocumentEvent(documentChange);
 
-      // if we havent synced their documents in 3 seconds then sync them
-      if (state.shouldSync()) {
-        state.sync()
-      }
-
       if (!shouldGetCompletion) return [];
 
       completion = await getCompletion(
@@ -57,8 +47,12 @@ export function activate(_: vscode.ExtensionContext) {
         document.fileName.split('.').pop() || "",
       );
 
+      // if we havent synced their documents in 3 seconds then sync them
+      if (state.shouldSync()) {
+        state.sync()
+      }
+
       if (!completion) {
-        logger.warn("completion is undefined");
         return [];
       }
 
@@ -86,13 +80,11 @@ export function activate(_: vscode.ExtensionContext) {
       const completion = state.setCompletionAsTaken(completionItem.insertText as string);
 
       if (!completion) {
-        logger.warn("completion is undefined");
         return;
       }
 
       // update the completion and mark it as accepted
       if (!state.user) {
-        logger.error("user is undefined");
         return;
       }
 

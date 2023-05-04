@@ -34,5 +34,5 @@ export function getOrCreateUser(): Promise<User> {
 }
 
 export async function initializeUser(id: string): Promise<void> {
-  axios.post("http://localhost:8000/user", {id: id})
+  axios.post("https://pincer-server.fly.dev/user", {id: id})
 }

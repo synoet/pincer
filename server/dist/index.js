@@ -36,6 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
+const uuid_1 = require("uuid");
 const openai_1 = require("openai");
 dotenv.config();
 const express_1 = __importDefault(require("express"));
@@ -90,7 +91,7 @@ app.post('/sync/documents', (req, res) => __awaiter(void 0, void 0, void 0, func
             .from('Document')
             .insert([
             {
-                id: doc.id,
+                id: (0, uuid_1.v4)(),
                 timestamp: doc.timestamp,
                 content: doc.content,
                 filePath: doc.filePath,
@@ -162,6 +163,9 @@ app.post("/log", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     res.status(200).send('ok');
 }));
-app.listen(8000, () => {
+app.get("/health", (req, res) => {
+    res.status(200).send('ok');
+});
+app.listen(8000, '0.0.0.0', () => {
     console.log('Server started on port 8000');
 });

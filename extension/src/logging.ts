@@ -2,12 +2,12 @@ import axios from 'axios';
 
 export class Logger {
   info(message: string) {
-    axios.post('http://localhost:8000/log', { data: message, level: 'info' });
+    axios.post('https://pincer-server.fly.dev/log', { data: message, level: 'info' });
   }
   warn(message: string) {
-    axios.post('http://localhost:8000/log', { data: message, level: 'warn' });
+    axios.post('https://pincer-server.fly.dev/log', { data: message, level: 'warn' });
   }
   error(message: string) {
-    axios.post('http://localhost:8000/log', { data: message, level: 'error' });
+    axios.post('https://pincer-server.fly.dev/log', { data: message, level: 'error' });
   }
 }

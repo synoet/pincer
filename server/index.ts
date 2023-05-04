@@ -1,13 +1,16 @@
 import * as dotenv from 'dotenv'
+import { v4 as uuidv4 } from 'uuid';
 import { Configuration, OpenAIApi } from "openai";
 dotenv.config()
 import express, {Request} from 'express';
+import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import {createClient} from '@supabase/supabase-js';
 import {Completion, User, DocumentChange} from 'shared';
 
 const app = express();
 app.use(bodyParser.json());
+app.use(morgan('combined'));
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_KEY
@@ -98,7 +101,7 @@ app.post('/sync/documents', async (req: DocumentRequest, res) => {
       .from('Document')
       .insert([
         {
-          id: doc.id,
+          id: uuidv4(),
           timestamp: doc.timestamp,
           content: doc.content,
           filePath: doc.filePath,
@@ -190,6 +193,6 @@ app.get("/health", (req, res) => {
   res.status(200).send('ok');
 });
 
-app.listen(8000, () => {
+app.listen(8000, '0.0.0.0', () => {
   console.log('Server started on port 8000');
 });

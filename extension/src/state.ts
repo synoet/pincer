@@ -29,7 +29,7 @@ class ExtensionState implements ExtensionState {
       return true;
     }
 
-    if (Date.now() - this.saveLog[this.saveLog.length - 1] > 3600) {
+    if (Date.now() - this.saveLog[this.saveLog.length - 1] > 10000) {
       return true;
     }
 
@@ -37,7 +37,7 @@ class ExtensionState implements ExtensionState {
   }
 
   async sync() {
-    return axios.post('http://localhost:8000/sync/documents', {documents: this.unsavedChanges, user: this.user})
+    return axios.post('https://pincer-server.fly.dev/sync/documents', {documents: this.unsavedChanges, user: this.user})
       .then((_) => {
         this.unsavedChanges = [];
         return;
@@ -50,8 +50,11 @@ class ExtensionState implements ExtensionState {
   }
 
   shouldGetCompletion(): boolean {
-    return true;
-    if (Date.now() - this.events[this.events.length - 1] > 3600) {
+    if (this.events.length == 0) {
+      return true; 
+    }
+
+    if (Date.now() - this.events[this.events.length - 1] > 1800) {
       return true;
     }
 

@@ -7,7 +7,7 @@ COPY ./shared ./shared
 
 WORKDIR /opt/app/server
 
-RUN npm ci --only=production;
+RUN npm install;
 
 COPY ./server ./
 
