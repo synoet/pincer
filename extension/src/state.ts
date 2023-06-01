@@ -1,5 +1,5 @@
-import axios from 'axios';
-import {DocumentChange, User, Completion} from 'shared'
+import axios from "axios";
+import { DocumentChange, User, Completion } from "shared";
 
 interface ExtensionState {
   changeLog: DocumentChange[];
@@ -11,7 +11,7 @@ interface ExtensionState {
 }
 
 class ExtensionState implements ExtensionState {
-  user: User | undefined = undefined 
+  user: User | undefined = undefined;
   changeLog: DocumentChange[] = [];
   unsavedChanges: DocumentChange[] = [];
   saveLog: number[] = [];
@@ -37,7 +37,11 @@ class ExtensionState implements ExtensionState {
   }
 
   async sync() {
-    return axios.post('https://pincer-server.fly.dev/sync/documents', {documents: this.unsavedChanges, user: this.user})
+    return axios
+      .post("https://pincer-server.fly.dev/sync/documents", {
+        documents: this.unsavedChanges,
+        user: this.user,
+      })
       .then((_) => {
         this.unsavedChanges = [];
         return;
@@ -46,12 +50,11 @@ class ExtensionState implements ExtensionState {
         console.log(error);
         return;
       });
-
   }
 
   shouldGetCompletion(): boolean {
     if (this.events.length == 0) {
-      return true; 
+      return true;
     }
 
     if (Date.now() - this.events[this.events.length - 1] > 1800) {
@@ -66,9 +69,11 @@ class ExtensionState implements ExtensionState {
   }
 
   setCompletionAsTaken(content: string): Completion | undefined {
-    let completion: Completion | undefined = this.completions.find((completion) => {
-      return completion.input === content;
-    });
+    let completion: Completion | undefined = this.completions.find(
+      (completion) => {
+        return completion.input === content;
+      }
+    );
 
     if (!completion) {
       return;
@@ -77,7 +82,7 @@ class ExtensionState implements ExtensionState {
     completion.accepted = true;
     completion.acceptedTimestamp = Date.now();
 
-    return completion; 
+    return completion;
   }
 }
 export { ExtensionState, DocumentChange, Completion };

@@ -3,35 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-declare module 'vscode' {
+declare module "vscode" {
+  // https://github.com/microsoft/vscode/issues/124024 @hediet @alexdima
 
-	// https://github.com/microsoft/vscode/issues/124024 @hediet @alexdima
+  export interface InlineCompletionItem {
+    /**
+     * If set to `true`, unopened closing brackets are removed and unclosed opening brackets are closed.
+     * Defaults to `false`.
+     */
+    completeBracketPairs?: boolean;
+  }
 
-	export interface InlineCompletionItem {
-		/**
-		 * If set to `true`, unopened closing brackets are removed and unclosed opening brackets are closed.
-		 * Defaults to `false`.
-		*/
-		completeBracketPairs?: boolean;
-	}
+  export interface InlineCompletionItemProvider {
+    // eslint-disable-next-line local/vscode-dts-provider-naming
+    handleDidShowCompletionItem?(completionItem: InlineCompletionItem): void;
 
-	export interface InlineCompletionItemProvider {
-		// eslint-disable-next-line local/vscode-dts-provider-naming
-		handleDidShowCompletionItem?(completionItem: InlineCompletionItem): void;
+    /**
+     * Is called when an inline completion item was accepted partially.
+     * @param acceptedLength The length of the substring of the inline completion that was accepted already.
+     */
+    // eslint-disable-next-line local/vscode-dts-provider-naming
+    handleDidPartiallyAcceptCompletionItem?(
+      completionItem: InlineCompletionItem,
+      acceptedLength: number
+    ): void;
+  }
 
-		/**
-		 * Is called when an inline completion item was accepted partially.
-		 * @param acceptedLength The length of the substring of the inline completion that was accepted already.
-		 */
-		// eslint-disable-next-line local/vscode-dts-provider-naming
-		handleDidPartiallyAcceptCompletionItem?(completionItem: InlineCompletionItem, acceptedLength: number): void;
-	}
-
-	// When finalizing `commands`, make sure to add a corresponding constructor parameter.
-	export interface InlineCompletionList {
-		/**
-		 * A list of commands associated with the inline completions of this list.
-		 */
-		commands?: Command[];
-	}
+  // When finalizing `commands`, make sure to add a corresponding constructor parameter.
+  export interface InlineCompletionList {
+    /**
+     * A list of commands associated with the inline completions of this list.
+     */
+    commands?: Command[];
+  }
 }

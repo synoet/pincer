@@ -1,54 +1,54 @@
 {
-	"enabledApiProposals": [
-		"inlineCompletionsAdditions"
-	],
-	"name": "pincer-extension",
-	"version": "0.0.1",
-	"publisher": "synoet",
-	"engines": {
-		"vscode": "^1.67.0"
-	},
-	"activationEvents": [
-		"*"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "extension.inline-completion-settings",
-				"title": "My Inline Completion Demo Settings"
-			}
-		],
-		"menus": {
-			"editor/inlineCompletions/actions": [
-				{
-					"command": "extension.inline-completion-settings"
-				}
-			]
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"lint": "eslint \"src/**/*.ts\"",
-		"watch": "tsc -watch -p ./",
-		"download-api": "vscode-dts dev",
-		"postinstall": "npm run download-api"
-	},
-	"devDependencies": {
-		"@types/node": "^16.11.7",
-		"@types/uuid": "^9.0.1",
-		"@types/vscode": "^1.62.0",
-		"@typescript-eslint/eslint-plugin": "^5.42.0",
-		"@typescript-eslint/parser": "^5.42.0",
-		"eslint": "^8.26.0",
-		"typescript": "^4.9.4",
-		"vscode-dts": "^0.3.3"
-	},
-	"dependencies": {
-		"@types/axios": "^0.14.0",
-		"axios": "^1.3.4",
-		"uuid": "^9.0.0",
+  "enabledApiProposals": [
+    "inlineCompletionsAdditions"
+  ],
+  "name": "pincer-extension",
+  "version": "0.0.1",
+  "publisher": "synoet",
+  "engines": {
+    "vscode": "^1.67.0"
+  },
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.inline-completion-settings",
+        "title": "My Inline Completion Demo Settings"
+      }
+    ],
+    "menus": {
+      "editor/inlineCompletions/actions": [
+        {
+          "command": "extension.inline-completion-settings"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint \"src/**/*.ts\"",
+    "watch": "tsc -watch -p ./",
+    "download-api": "vscode-dts dev",
+    "postinstall": "npm run download-api"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7",
+    "@types/uuid": "^9.0.1",
+    "@types/vscode": "^1.62.0",
+    "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "@typescript-eslint/parser": "^5.42.0",
+    "eslint": "^8.26.0",
+    "typescript": "^4.9.4",
+    "vscode-dts": "^0.3.3"
+  },
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "axios": "^1.3.4",
+    "uuid": "^9.0.0",
     "shared": "file:../shared"
-	}
+  }
 }
