@@ -3,4 +3,5 @@ node_modules
 .vscode-test/
 .vscode
 .proj
+**/dist
 **/.env
