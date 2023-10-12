@@ -6,7 +6,7 @@ export async function getCompletion(
   input: string,
   context: string,
   fileExtension: string
-): Promise<Completion | undefined> {
+): Promise<Completion | null> {
   const response = await axios.post(
     "https://pincer-server.fly.dev/completion",
     { prompt: input, context: context, fileExtension: fileExtension }
@@ -23,7 +23,7 @@ export async function getCompletion(
     };
   }
 
-  return undefined;
+  return null;
 }
 
 export async function syncCompletion(

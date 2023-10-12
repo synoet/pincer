@@ -4,21 +4,57 @@ import { DocumentChange, Completion } from "shared";
 import { getOrCreateUser, initializeUser } from "./user";
 import { getCompletion, syncCompletion } from "./completion";
 import { v4 as uuid } from "uuid";
+import * as mixpanel from "mixpanel";
 
 let state: ExtensionState = new ExtensionState();
+let mp = mixpanel.init();
+
+function onDidAcceptCompletion(completion: Completion) {
+  if (!state.user) {
+    mp.track("extension_error", {
+      description:
+        "completion was accepted but user was not found in local state",
+      completion: completion.completion,
+      completion_id: completion.id,
+      language: completion.language,
+    });
+    return;
+  }
+
+  const acceptedCompletion = state.setCompletionAsTaken(completion.id);
+
+  if (!acceptedCompletion) {
+    mp.track("extension_error", {
+      description: "completion was accepted but was not found in local state",
+      completion: completion.completion,
+      completion_id: completion.id,
+      language: completion.language,
+    });
+    return;
+  }
+
+  mp.track("completion_accepted", {
+    distinct_id: state.user.id,
+    completion: completion.completion,
+    completion_id: completion.id,
+    language: completion.language,
+  });
+
+  syncCompletion(acceptedCompletion, state.user);
+}
 
 export function activate(_: vscode.ExtensionContext) {
   const provider: vscode.InlineCompletionItemProvider = {
-    async provideInlineCompletionItems(document, position, context, token) {
+    async provideInlineCompletionItems(document, position, _context, _token) {
       if (!state.user) {
         state.user = await getOrCreateUser();
         initializeUser(state.user.id);
       }
 
       let shouldGetCompletion: boolean = state.shouldGetCompletion();
-      let completion: Completion | undefined = undefined;
+      let completion: Completion | null = null;
 
-      // the current state of the document
+
       let documentChange: DocumentChange = {
         id: uuid(),
         content: document.getText(),
@@ -26,12 +62,10 @@ export function activate(_: vscode.ExtensionContext) {
         timestamp: Date.now(),
       };
 
-      // text up until the current position
       let currentContext: string = document.getText(
         new vscode.Range(position.with(undefined, 0), position)
       );
 
-      // if the user hasn't types 5 characters, don't get a completion
       if (documentChange.content.length < 5) {
         shouldGetCompletion = false;
       }
@@ -46,12 +80,15 @@ export function activate(_: vscode.ExtensionContext) {
         document.fileName.split(".").pop() || ""
       );
 
-      // if we havent synced their documents in 3 seconds then sync them
       if (state.shouldSync()) {
         state.sync();
       }
 
       if (!completion) {
+        mp.track("completion_error", {
+          description: "completion was not returned from server",
+          user_id: state.user.id,
+        });
         return [];
       }
 
@@ -59,47 +96,36 @@ export function activate(_: vscode.ExtensionContext) {
       state.addCompletion(completion);
       syncCompletion(completion, state.user);
 
-      const result: vscode.InlineCompletionList = {
-        items: [
-          {
-            insertText: completion.completion,
-            range: new vscode.Range(
-              position.line,
-              position.character,
-              position.line,
-              position.character + completion.completion.length
-            ),
-          },
-        ],
-        commands: [],
-      };
+      mp.track("completion", {
+        distinct_id: state.user.id,
+        completion: completion.completion,
+        language: document.fileName.split(".").pop() || "",
+      });
 
-      return result;
-    },
-
-    handleDidPartiallyAcceptCompletionItem(
-      completionItem: vscode.InlineCompletionItem
-    ) {
-      // try and fetch the original completion by its text
-      const completion = state.setCompletionAsTaken(
-        completionItem.insertText as string
+      const replaceRange = new vscode.Range(
+        position.line,
+        position.character,
+        position.line,
+        position.character + completion.completion.length
       );
 
-      if (!completion) {
-        return;
-      }
-
-      // update the completion and mark it as accepted
-      if (!state.user) {
-        return;
-      }
-
-      syncCompletion(completion, state.user);
+      return [
+        new vscode.InlineCompletionItem(completion.completion, replaceRange, {
+          title: "",
+          command: "pincer.acceptCompletion",
+          arguments: [completion],
+        }),
+      ];
     },
   };
 
   vscode.languages.registerInlineCompletionItemProvider(
     { pattern: "**" },
     provider
+  );
+
+  vscode.commands.registerCommand(
+    "pincer.acceptCompletion",
+    onDidAcceptCompletion
   );
 }

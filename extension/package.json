@@ -48,7 +48,8 @@
   "dependencies": {
     "@types/axios": "^0.14.0",
     "axios": "^1.3.4",
-    "uuid": "^9.0.0",
-    "shared": "file:../shared"
+    "mixpanel": "^0.18.0",
+    "shared": "file:../shared",
+    "uuid": "^9.0.0"
   }
 }

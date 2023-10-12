@@ -47,7 +47,7 @@ class ExtensionState implements ExtensionState {
         return;
       })
       .catch((error) => {
-        console.log(error);
+
         return;
       });
   }
@@ -57,7 +57,10 @@ class ExtensionState implements ExtensionState {
       return true;
     }
 
-    if (Date.now() - this.events[this.events.length - 1] > 1800) {
+    if (
+      Date.now() - this.events.sort((a, b) => b - a)[this.events.length - 1] >
+      1800
+    ) {
       return true;
     }
 
@@ -68,10 +71,10 @@ class ExtensionState implements ExtensionState {
     this.completions.push(completion);
   }
 
-  setCompletionAsTaken(content: string): Completion | undefined {
+  setCompletionAsTaken(id: string): Completion | undefined {
     let completion: Completion | undefined = this.completions.find(
       (completion) => {
-        return completion.input === content;
+        return completion.id === id;
       }
     );
 
