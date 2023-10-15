@@ -5,9 +5,11 @@ import { getOrCreateUser, initializeUser } from "./user";
 import { getCompletion, syncCompletion } from "./completion";
 import { v4 as uuid } from "uuid";
 import * as mixpanel from "mixpanel";
+import { readVersion } from "./utils";
 
+const EXTENSION_VERSION = readVersion();
 let state: ExtensionState = new ExtensionState();
-let mp = mixpanel.init();
+let mp = mixpanel.init("bingo");
 
 function onDidAcceptCompletion(completion: Completion) {
   if (!state.user) {
@@ -17,6 +19,7 @@ function onDidAcceptCompletion(completion: Completion) {
       completion: completion.completion,
       completion_id: completion.id,
       language: completion.language,
+      version: EXTENSION_VERSION,
     });
     return;
   }
@@ -29,6 +32,7 @@ function onDidAcceptCompletion(completion: Completion) {
       completion: completion.completion,
       completion_id: completion.id,
       language: completion.language,
+      version: EXTENSION_VERSION,
     });
     return;
   }
@@ -38,12 +42,17 @@ function onDidAcceptCompletion(completion: Completion) {
     completion: completion.completion,
     completion_id: completion.id,
     language: completion.language,
+    version: EXTENSION_VERSION,
   });
 
   syncCompletion(acceptedCompletion, state.user);
 }
 
 export function activate(_: vscode.ExtensionContext) {
+  mp.track("extension_activated", {
+    version: EXTENSION_VERSION,
+    distinct_id: state.user?.id || "no_user",
+  });
   const provider: vscode.InlineCompletionItemProvider = {
     async provideInlineCompletionItems(document, position, _context, _token) {
       if (!state.user) {
@@ -85,9 +94,10 @@ export function activate(_: vscode.ExtensionContext) {
       }
 
       if (!completion) {
-        mp.track("completion_error", {
+        mp.track("extension_error", {
           description: "completion was not returned from server",
           user_id: state.user.id,
+          version: EXTENSION_VERSION,
         });
         return [];
       }
@@ -100,6 +110,7 @@ export function activate(_: vscode.ExtensionContext) {
         distinct_id: state.user.id,
         completion: completion.completion,
         language: document.fileName.split(".").pop() || "",
+        version: EXTENSION_VERSION,
       });
 
       const replaceRange = new vscode.Range(
