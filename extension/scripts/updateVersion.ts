@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { exec } from 'child_process';
+import { execSync } from 'child_process';
 import * as fs from 'fs';
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -53,19 +53,31 @@ const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
 packageJson['version'] = newVersionString;
 fs.writeFileSync('../package.json', JSON.stringify(packageJson, null, 2));
 
-const execCallback = (error: any, stdout: any, stderr: any) => {
-  if (error) {
-    console.error(error);
-  }
-  if (stdout) {
-    console.log(stdout);
-  }
-  if (stderr) {
-    console.error(stderr);
-  }
+execSync("cd ../ && bun run compile");
+execSync("cd ../ && yes 'y' | vsce package --out ./bin");
+
+const packageName = `pincer-extension-${newVersionString}.vsix`;
+
+const packageFile = fs.readFileSync(`../bin/${packageName}`);
+
+const { error } = await supabase.storage.from('extension-bin').upload(packageName, packageFile);
+
+
+const { data} = await supabase.from("Version").select("*").eq("latest", true);
+
+if (data && data.length > 0) {
+  await supabase.from("Version").update({
+    latest: false,
+  }).eq("version", data[0].version);
 }
 
-exec("cd ../ && bun run compile", execCallback);
-exec("cd ../ && yes 'y' | vsce package --out ./bin", execCallback);
+await supabase.from("Version").insert({
+  version: newVersionString,
+  latest: true,
+});
 
-console.log("Version updated to", newVersionString);
+if (error) {
+  console.error("failed to upload package", error);
+}
+
+console.log(`bumped extension version ${versionString.join(".")} -> ${newVersionString}, and uploaded package`);

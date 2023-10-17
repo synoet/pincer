@@ -192,6 +192,53 @@ app.post("/sync/completion", async (req: CompletionSyncRequest, res) => {
   )
 });
 
+const getLatestVersion = () => ResultAsync.fromPromise(
+  supabase.from("Version").select("*").eq("latest", true).limit(1),
+  (error) => error
+)
+
+app.get("/version/latest", async (_req, res) => {
+  return getLatestVersion().match(
+    (ok) => {
+      res.status(200).send(ok?.data?.at(0).version)
+    },
+    (err) => {
+      console.error(err);
+      res.status(500).send();
+    }
+  )
+});
+
+app.get("/version/latest/download", async (_req, res) => {
+  return getLatestVersion().match(
+    (ok) => {
+      const version = ok?.data?.at(0).version;
+      if (!version) {
+        return res.status(500).send();
+      }
+
+      return ResultAsync.fromPromise(
+        supabase.storage.from("extension-bin")
+        .download(`pincer-extension-${version}.vsix`),
+        (error) => error
+      ).match(
+        (ok) => {
+          res.status(200).send(ok.data);
+        },
+        (err) => {
+          console.error(err);
+          res.status(500).send();
+        }
+      )
+    },
+    (err) => {
+      console.error(err);
+      return res.status(500).send();
+    }
+  );
+});
+
+
 app.get("/health", (_req, res) => {
   res.status(200).send("ok");
 });
