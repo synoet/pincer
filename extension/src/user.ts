@@ -34,5 +34,9 @@ export function getOrCreateUser(): Promise<User> {
 }
 
 export async function initializeUser(id: string): Promise<void> {
-  axios.post("https://pincer-server.fly.dev/user", { id: id });
+  axios.post(
+    "https://pincer-server.fly.dev/user",
+    { id: id },
+    { headers: { "auth-key": process.env.AUTH_KEY } }
+  );
 }

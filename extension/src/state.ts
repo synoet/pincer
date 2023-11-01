@@ -38,15 +38,20 @@ class ExtensionState implements ExtensionState {
 
   async sync() {
     return axios
-      .post("https://pincer-server.fly.dev/sync/documents", {
-        documents: this.unsavedChanges,
-        user: this.user,
-      })
+      .post(
+        "https://pincer-server.fly.dev/sync/documents",
+        {
+          documents: this.unsavedChanges,
+          user: this.user,
+        },
+        { headers: { "auth-key": process.env.AUTH_KEY } }
+      )
       .then((_) => {
         this.unsavedChanges = [];
         return;
       })
       .catch((error) => {
+        console.log(error);
         return;
       });
   }

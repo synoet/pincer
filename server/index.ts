@@ -2,7 +2,11 @@ import morgan from "morgan";
 import { ResultAsync, err } from "neverthrow";
 import { v4 as uuidv4 } from "uuid";
 import { Configuration, OpenAIApi } from "openai";
-import express, { Request } from "express";
+import express, {
+  NextFunction,
+  Request,
+  Response as ExpressResponse,
+} from "express";
 import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
 import { Completion, User, DocumentChange } from "shared";
@@ -61,7 +65,19 @@ interface CompletionSyncRequest extends Request {
   };
 }
 
-app.post("/user", async (req: UserRequest, res) => {
+const authMiddleware = (
+  req: Request,
+  res: ExpressResponse,
+  next: NextFunction
+) => {
+  const authKey = req.headers["auth-key"];
+  if (!authKey || authKey !== process.env.AUTH_KEY) {
+    return res.status(403).send("Forbidden: Invalid AUTH key");
+  }
+  next();
+};
+
+app.post("/user", authMiddleware, async (req: UserRequest, res) => {
   return ResultAsync.fromPromise(
     supabase.from("User").select("*").eq("id", req.body.id),
     (error) => {
@@ -95,7 +111,7 @@ app.post("/user", async (req: UserRequest, res) => {
     );
 });
 
-app.post("/completion", async (req: CompletionRequest, res) => {
+app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
   const openai = new OpenAIApi(configuration);
 
   return ResultAsync.fromPromise(
@@ -164,33 +180,37 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
   );
 });
 
-app.post("/sync/completion", async (req: CompletionSyncRequest, res) => {
-  const { completion, user } = req.body;
+app.post(
+  "/sync/completion",
+  authMiddleware,
+  async (req: CompletionSyncRequest, res) => {
+    const { completion, user } = req.body;
 
-  return ResultAsync.fromPromise(
-    supabase.from("Completion").upsert([
-      {
-        id: completion.id,
-        timestamp: completion.timestamp,
-        completion: completion.completion,
-        userId: user.id,
-        accepted: completion.accepted,
-        language: completion.language,
-        acceptedTimestamp: completion.acceptedTimestamp,
-        input: completion.input,
+    return ResultAsync.fromPromise(
+      supabase.from("Completion").upsert([
+        {
+          id: completion.id,
+          timestamp: completion.timestamp,
+          completion: completion.completion,
+          userId: user.id,
+          accepted: completion.accepted,
+          language: completion.language,
+          acceptedTimestamp: completion.acceptedTimestamp,
+          input: completion.input,
+        },
+      ]),
+      (error) => error
+    ).match(
+      (_ok) => {
+        res.status(200).send();
       },
-    ]),
-    (error) => error
-  ).match(
-    (_ok) => {
-      res.status(200).send();
-    },
-    (err) => {
-      console.error(err);
-      res.status(500).send();
-    }
-  );
-});
+      (err) => {
+        console.error(err);
+        res.status(500).send();
+      }
+    );
+  }
+);
 
 const getLatestVersion = () =>
   ResultAsync.fromPromise(
