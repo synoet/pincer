@@ -7,9 +7,14 @@ import { v4 as uuid } from "uuid";
 import * as mixpanel from "mixpanel";
 import { readVersion } from "./utils";
 
+if (!process.env.MIXPANEL_TOKEN) {
+  throw new Error("MIXPANEL_TOKEN is not set");
+}
+
+
 const EXTENSION_VERSION = readVersion();
 let state: ExtensionState = new ExtensionState();
-let mp = mixpanel.init("bingo");
+let mp = mixpanel.init(process.env.MIXPANEL_TOKEN);
 
 function onDidAcceptCompletion(completion: Completion) {
   if (!state.user) {

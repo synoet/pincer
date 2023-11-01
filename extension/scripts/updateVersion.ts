@@ -53,7 +53,7 @@ const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
 packageJson['version'] = newVersionString;
 fs.writeFileSync('../package.json', JSON.stringify(packageJson, null, 2));
 
-execSync("cd ../ && bun run compile");
+execSync("cd ../ && bun run esbuild");
 execSync("cd ../ && yes 'y' | vsce package --out ./bin");
 
 const packageName = `pincer-extension-${newVersionString}.vsix`;
