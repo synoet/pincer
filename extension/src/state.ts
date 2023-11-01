@@ -47,7 +47,6 @@ class ExtensionState implements ExtensionState {
         return;
       })
       .catch((error) => {
-
         return;
       });
   }

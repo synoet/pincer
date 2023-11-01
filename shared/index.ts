@@ -5,7 +5,6 @@ export interface DocumentChange {
   timestamp: number;
 }
 
-
 export interface Completion {
   id: string;
   completion: string;

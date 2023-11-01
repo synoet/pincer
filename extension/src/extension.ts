@@ -11,7 +11,6 @@ if (!process.env.MIXPANEL_TOKEN) {
   throw new Error("MIXPANEL_TOKEN is not set");
 }
 
-
 const EXTENSION_VERSION = readVersion();
 let state: ExtensionState = new ExtensionState();
 let mp = mixpanel.init(process.env.MIXPANEL_TOKEN);
@@ -67,7 +66,6 @@ export function activate(_: vscode.ExtensionContext) {
 
       let shouldGetCompletion: boolean = state.shouldGetCompletion();
       let completion: Completion | null = null;
-
 
       let documentChange: DocumentChange = {
         id: uuid(),

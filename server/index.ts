@@ -1,5 +1,5 @@
 import morgan from "morgan";
-import { ResultAsync, err} from "neverthrow";
+import { ResultAsync, err } from "neverthrow";
 import { v4 as uuidv4 } from "uuid";
 import { Configuration, OpenAIApi } from "openai";
 import express, { Request } from "express";
@@ -67,7 +67,7 @@ app.post("/user", async (req: UserRequest, res) => {
     (error) => {
       console.log(error);
       return error;
-    },
+    }
   )
     .andThen((response) => {
       if (response && (response.count ?? 0) > 0) {
@@ -82,7 +82,7 @@ app.post("/user", async (req: UserRequest, res) => {
         (error) => {
           console.log("Failed to add new user", error);
           return error;
-        },
+        }
       );
     })
     .match(
@@ -91,7 +91,7 @@ app.post("/user", async (req: UserRequest, res) => {
       },
       (_err) => {
         res.status(500).send();
-      },
+      }
     );
 });
 
@@ -106,7 +106,7 @@ app.post("/completion", async (req: CompletionRequest, res) => {
     (error) => {
       console.log(error);
       return error;
-    },
+    }
   ).match(
     (ok) => {
       res
@@ -119,7 +119,7 @@ app.post("/completion", async (req: CompletionRequest, res) => {
     (err) => {
       console.error(err);
       res.status(500).send();
-    },
+    }
   );
 });
 
@@ -150,9 +150,9 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
         (error) => {
           console.error(error);
           return error;
-        },
-      ),
-    ),
+        }
+      )
+    )
   ).match(
     (_ok) => {
       res.status(200).send("ok");
@@ -160,13 +160,13 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
     (err) => {
       console.error(err);
       res.status(500).send();
-    },
+    }
   );
 });
 
 app.post("/sync/completion", async (req: CompletionSyncRequest, res) => {
   const { completion, user } = req.body;
-   
+
   return ResultAsync.fromPromise(
     supabase.from("Completion").upsert([
       {
@@ -178,7 +178,7 @@ app.post("/sync/completion", async (req: CompletionSyncRequest, res) => {
         language: completion.language,
         acceptedTimestamp: completion.acceptedTimestamp,
         input: completion.input,
-      }
+      },
     ]),
     (error) => error
   ).match(
@@ -189,24 +189,25 @@ app.post("/sync/completion", async (req: CompletionSyncRequest, res) => {
       console.error(err);
       res.status(500).send();
     }
-  )
+  );
 });
 
-const getLatestVersion = () => ResultAsync.fromPromise(
-  supabase.from("Version").select("*").eq("latest", true).limit(1),
-  (error) => error
-)
+const getLatestVersion = () =>
+  ResultAsync.fromPromise(
+    supabase.from("Version").select("*").eq("latest", true).limit(1),
+    (error) => error
+  );
 
 app.get("/version/latest", async (_req, res) => {
   return getLatestVersion().match(
     (ok) => {
-      res.status(200).send(ok?.data?.at(0).version)
+      res.status(200).send(ok?.data?.at(0).version);
     },
     (err) => {
       console.error(err);
       res.status(500).send();
     }
-  )
+  );
 });
 
 app.get("/version/latest/download", async (_req, res) => {
@@ -218,8 +219,9 @@ app.get("/version/latest/download", async (_req, res) => {
       }
 
       return ResultAsync.fromPromise(
-        supabase.storage.from("extension-bin")
-        .download(`pincer-extension-${version}.vsix`),
+        supabase.storage
+          .from("extension-bin")
+          .download(`pincer-extension-${version}.vsix`),
         (error) => error
       ).match(
         (ok) => {
@@ -229,7 +231,7 @@ app.get("/version/latest/download", async (_req, res) => {
           console.error(err);
           res.status(500).send();
         }
-      )
+      );
     },
     (err) => {
       console.error(err);
@@ -237,7 +239,6 @@ app.get("/version/latest/download", async (_req, res) => {
     }
   );
 });
-
 
 app.get("/health", (_req, res) => {
   res.status(200).send("ok");
