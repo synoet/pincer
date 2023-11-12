@@ -230,6 +230,7 @@ app.get("/version/latest", async (_req, res) => {
   );
 });
 
+
 app.get("/version/latest/download", async (_req, res) => {
   return getLatestVersion().match(
     (ok) => {
@@ -237,19 +238,34 @@ app.get("/version/latest/download", async (_req, res) => {
       if (!version) {
         return res.status(500).send();
       }
-
       return ResultAsync.fromPromise(
         supabase.storage
           .from("extension-bin")
           .download(`pincer-extension-${version}.vsix`),
         (error) => error
       ).match(
-        (ok) => {
-          res.status(200).send(ok.data);
+        async (ok) => {
+          if (!ok.data) return res.status(500).send();
+          return ResultAsync.fromPromise(
+            ok.data.arrayBuffer(),
+            (error) => error
+
+          ).match(
+            (ok) => {
+              return res.status(200)
+                .setHeader('Content-Type', 'application/vsix')
+                .setHeader('Content-Disposition', `attachment; filename=pincer-extension-${version}.vsix`)
+                .send(Buffer.from(ok));
+            },
+            (err) => {
+              console.error(err);
+              return res.status(500).send();
+            }
+          )
         },
-        (err) => {
+        async (err) => {
           console.error(err);
-          res.status(500).send();
+          return res.status(500).send();
         }
       );
     },
