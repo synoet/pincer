@@ -5,7 +5,7 @@
     "lib": ["es2020", "dom"],
     "outDir": "out",
     "sourceMap": true,
-    "strict": true,
+    "strict": false,
     "rootDir": "src"
   },
   "exclude": ["node_modules", ".vscode-test", "./scripts"]

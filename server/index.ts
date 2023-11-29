@@ -10,6 +10,7 @@ import express, {
 import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
 import { Completion, User, DocumentChange } from "shared";
+import { walkUpBindingElementsAndPatterns } from "typescript";
 
 const app = express();
 app.use(bodyParser.json());
@@ -141,7 +142,7 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
 
 app.post("/sync/documents", async (req: DocumentRequest, res) => {
   const { documents, user } = req.body;
-  if (!document) {
+  if (!documents) {
     console.error("Missing documents");
     return res.status(500).send();
   }

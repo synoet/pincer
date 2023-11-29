@@ -3,8 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
-import { User } from "shared";
-import { parse } from "path";
+import { User, UserSettings} from "shared";
 
 export function getOrCreateUser(): Promise<User> {
   const configPath: string = path.join(os.homedir(), ".pincer.conf");
@@ -33,10 +32,20 @@ export function getOrCreateUser(): Promise<User> {
   });
 }
 
-export async function initializeUser(id: string): Promise<void> {
-  axios.post(
+export async function initializeUser(id: string, netId: string): Promise<void> {
+  await axios.post(
     "https://pincer-server.fly.dev/user",
-    { id: id },
+    { id: id , netId: netId},
     { headers: { "auth-key": process.env.AUTH_KEY } }
   );
+}
+
+export async function getUserSettings(id: string): Promise<UserSettings | null> {
+  return axios
+    .get(`https://pincer-server.fly.dev/user/settings/${id}`, {
+      headers: { "auth-key": process.env.AUTH_KEY },
+    })
+    .then((response) => {
+      return response.data;
+    });
 }

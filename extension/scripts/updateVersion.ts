@@ -4,7 +4,7 @@ import * as fs from "fs";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
-const EXTENSION_VERSION_PATH = "../EXTENSION_VERSION";
+const EXTENSION_VERSION_PATH = "./EXTENSION_VERSION";
 
 if (!supabaseKey) {
   throw new Error("Missing SUPABASE_KEY env variable");
@@ -51,16 +51,16 @@ const newVersionString = `${version.major}.${version.minor}.${version.patch}`;
 
 fs.writeFileSync(EXTENSION_VERSION_PATH, newVersionString);
 
-const packageJson = JSON.parse(fs.readFileSync("../package.json", "utf8"));
+const packageJson = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 packageJson["version"] = newVersionString;
-fs.writeFileSync("../package.json", JSON.stringify(packageJson, null, 2));
+fs.writeFileSync("./package.json", JSON.stringify(packageJson, null, 2));
 
-execSync("cd ../ && bun run esbuild");
-execSync("cd ../ && yes 'y' | vsce package --out ./bin");
+execSync("bun run esbuild");
+execSync("yes 'y' | vsce package --out ./bin");
 
 const packageName = `pincer-extension-${newVersionString}.vsix`;
 
-const packageFile = fs.readFileSync(`../bin/${packageName}`);
+const packageFile = fs.readFileSync(`./bin/${packageName}`);
 
 const { error } = await supabase.storage
   .from("extension-bin")

@@ -7,11 +7,15 @@ export async function getCompletion(
   context: string,
   fileExtension: string
 ): Promise<Completion | null> {
+  console.log(process.env.AUTH_KEY);
   const response = await axios.post(
     "https://pincer-server.fly.dev/completion",
     { prompt: input, context: context, fileExtension: fileExtension },
     { headers: { "auth-key": process.env.AUTH_KEY } }
-  );
+  ).catch((error) => {
+    console.error(error);
+    return null
+  });
 
   if (response.status === 200) {
     return {

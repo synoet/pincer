@@ -18,3 +18,8 @@ export interface Completion {
 export interface User {
   id: string;
 }
+
+export interface UserSettings {
+  modelId?: string;
+  enabled: boolean;
+}

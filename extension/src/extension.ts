@@ -1,17 +1,19 @@
 import * as vscode from "vscode";
 import { ExtensionState } from "./state";
 import { DocumentChange, Completion } from "shared";
-import { getOrCreateUser, initializeUser } from "./user";
+import { getOrCreateUser, initializeUser, getUserSettings} from "./user";
 import { getCompletion, syncCompletion } from "./completion";
 import { v4 as uuid } from "uuid";
 import * as mixpanel from "mixpanel";
 import { readVersion } from "./utils";
+import { warn } from "console";
 
 if (!process.env.MIXPANEL_TOKEN) {
   throw new Error("MIXPANEL_TOKEN is not set");
 }
 
 const EXTENSION_VERSION = readVersion();
+const NETID = process.env.NETID;
 let state: ExtensionState = new ExtensionState();
 let mp = mixpanel.init(process.env.MIXPANEL_TOKEN);
 
@@ -57,14 +59,40 @@ export function activate(_: vscode.ExtensionContext) {
     version: EXTENSION_VERSION,
     distinct_id: state.user?.id || "no_user",
   });
+  if (!NETID) {
+    mp.track("extension_error",  {
+      version: EXTENSION_VERSION,
+      description: "NETID is not set",
+      distinct_id: state.user?.id || "no_user",
+    })
+  }
   const provider: vscode.InlineCompletionItemProvider = {
     async provideInlineCompletionItems(document, position, _context, _token) {
-      if (!state.user) {
-        state.user = await getOrCreateUser();
-        initializeUser(state.user.id);
+      if (!NETID) {
+        return []
       }
 
-      let shouldGetCompletion: boolean = state.shouldGetCompletion();
+      if (!state.user) {
+        state.user = await getOrCreateUser();
+        initializeUser(state.user.id, NETID);
+      }
+
+
+      if (!state.settings) {
+        const settings = await getUserSettings(state.user.id);
+        if (!settings) {
+          mp.track("extension_error", {
+            description: "settings were not returned from server",
+            user_id: state.user.id,
+            version: EXTENSION_VERSION,
+          });
+          return [];
+        }
+
+        state.settings = settings;
+      }
+
+      let shouldGetCompletion: boolean = state.settings.enabled && state.shouldGetCompletion();
       let completion: Completion | null = null;
 
       let documentChange: DocumentChange = {
@@ -83,6 +111,7 @@ export function activate(_: vscode.ExtensionContext) {
       }
 
       state.addDocumentEvent(documentChange);
+      console.log(shouldGetCompletion)
 
       if (!shouldGetCompletion) return [];
 
@@ -91,6 +120,7 @@ export function activate(_: vscode.ExtensionContext) {
         document.getText(),
         document.fileName.split(".").pop() || ""
       );
+      console.log(completion)
 
       if (state.shouldSync()) {
         state.sync();
