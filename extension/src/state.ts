@@ -1,5 +1,5 @@
 import axios from "axios";
-import { DocumentChange, User, Completion, UserSettings} from "shared";
+import { DocumentChange, User, Completion, UserSettings } from "shared";
 
 interface ExtensionState {
   changeLog: DocumentChange[];
@@ -17,8 +17,7 @@ class ExtensionState implements ExtensionState {
   saveLog: number[] = [];
   completions: Completion[] = [];
   events: number[] = [];
-  settings: UserSettings | null; 
-
+  settings: UserSettings | null;
 
   addDocumentEvent(document: DocumentChange) {
     this.changeLog.push(document);

@@ -10,14 +10,22 @@ export async function getCompletion(
   fileExtension: string
 ): Promise<Completion | null> {
   console.log(process.env.AUTH_KEY);
-  const response = await axios.post(
-    "https://pincer-server.fly.dev/completion",
-    { prompt: input, context: context, fileExtension: fileExtension, userId, netId},
-    { headers: { "auth-key": process.env.AUTH_KEY } }
-  ).catch((error) => {
-    console.error(error);
-    return null
-  });
+  const response = await axios
+    .post(
+      "https://pincer-server.fly.dev/completion",
+      {
+        prompt: input,
+        context: context,
+        fileExtension: fileExtension,
+        userId,
+        netId,
+      },
+      { headers: { "auth-key": process.env.AUTH_KEY } }
+    )
+    .catch((error) => {
+      console.error(error);
+      return null;
+    });
 
   if (response.status === 200) {
     return {
@@ -37,10 +45,12 @@ export async function syncCompletion(
   completion: Completion,
   user: User
 ): Promise<void> {
-  axios.post("https://pincer-server.fly.dev/sync/completion", {
-    completion: completion,
-    user: user,
-  }).catch((e) => {
-    console.log(e)
-  })
+  axios
+    .post("https://pincer-server.fly.dev/sync/completion", {
+      completion: completion,
+      user: user,
+    })
+    .catch((e) => {
+      console.log(e);
+    });
 }

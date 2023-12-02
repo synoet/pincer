@@ -147,25 +147,25 @@ app.post("/user", authMiddleware, async (req: UserRequest, res) => {
 });
 
 app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
-    return ResultAsync.fromPromise(
-      supabase.from("UserSettings").select("*").eq("id", req.params.id),
-      (error) => {
-        console.log(error);
-        return error;
-      }
-    ).match(
-      (ok) => {
-        if (!ok.data || ok.data.length === 0) {
-          return res.status(500).send();
-        }
-        return res.status(200).json(ok.data[0]).send();
-      },
-      (err) => {
-        console.error(err);
+  return ResultAsync.fromPromise(
+    supabase.from("UserSettings").select("*").eq("id", req.params.id),
+    (error) => {
+      console.log(error);
+      return error;
+    }
+  ).match(
+    (ok) => {
+      if (!ok.data || ok.data.length === 0) {
         return res.status(500).send();
       }
-    )
-})
+      return res.status(200).json(ok.data[0]).send();
+    },
+    (err) => {
+      console.error(err);
+      return res.status(500).send();
+    }
+  );
+});
 
 app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
   ResultAsync.fromPromise(

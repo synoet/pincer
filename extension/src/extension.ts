@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { ExtensionState } from "./state";
 import { DocumentChange, Completion } from "shared";
-import { getOrCreateUser, initializeUser, getUserSettings} from "./user";
+import { getOrCreateUser, initializeUser, getUserSettings } from "./user";
 import { getCompletion, syncCompletion } from "./completion";
 import { v4 as uuid } from "uuid";
 import * as mixpanel from "mixpanel";
@@ -60,24 +60,23 @@ export function activate(_: vscode.ExtensionContext) {
     distinct_id: state.user?.id || "no_user",
   });
   if (!NETID) {
-    mp.track("extension_error",  {
+    mp.track("extension_error", {
       version: EXTENSION_VERSION,
       description: "NETID is not set",
       distinct_id: state.user?.id || "no_user",
-    })
+    });
   }
   const provider: vscode.InlineCompletionItemProvider = {
     async provideInlineCompletionItems(document, position, _context, _token) {
       if (!NETID) {
         console.error("NETID is not set");
-        return []
+        return [];
       }
 
       if (!state.user) {
         state.user = await getOrCreateUser();
         initializeUser(state.user.id, NETID);
       }
-
 
       if (!state.settings) {
         const settings = await getUserSettings(state.user.id);
@@ -93,7 +92,8 @@ export function activate(_: vscode.ExtensionContext) {
         state.settings = settings;
       }
 
-      let shouldGetCompletion: boolean = state.settings.enabled && state.shouldGetCompletion();
+      let shouldGetCompletion: boolean =
+        state.settings.enabled && state.shouldGetCompletion();
       let completion: Completion | null = null;
 
       let documentChange: DocumentChange = {
@@ -112,7 +112,7 @@ export function activate(_: vscode.ExtensionContext) {
       }
 
       state.addDocumentEvent(documentChange);
-      console.log(shouldGetCompletion)
+      console.log(shouldGetCompletion);
 
       if (!shouldGetCompletion) return [];
 
@@ -121,9 +121,9 @@ export function activate(_: vscode.ExtensionContext) {
         document.getText(),
         document.fileName.split(".").pop() || "",
         state.user.id,
-        NETID,
+        NETID
       );
-      console.log(completion)
+      console.log(completion);
 
       if (state.shouldSync()) {
         state.sync();
