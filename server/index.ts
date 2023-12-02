@@ -1,3 +1,4 @@
+// Yes I'm aware this file is getting a little messy - synoet
 import morgan from "morgan";
 import { ResultAsync, err } from "neverthrow";
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +11,6 @@ import express, {
 import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
 import { Completion, User, DocumentChange } from "shared";
-import { walkUpBindingElementsAndPatterns } from "typescript";
 
 const app = express();
 app.use(bodyParser.json());
@@ -32,7 +32,7 @@ if (!openaiKey) {
   throw new Error("Missing OPENAI_API_KEY env variable");
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 const configuration = new Configuration({
   apiKey: openaiKey,
@@ -41,11 +41,14 @@ const configuration = new Configuration({
 interface UserRequest extends Request {
   body: {
     id: string;
+    netId: string;
   };
 }
 
 interface CompletionRequest extends Request {
   body: {
+    id: string;
+    netId: string;
     prompt: string;
     context: string;
     fileExtension: string;
@@ -64,6 +67,15 @@ interface CompletionSyncRequest extends Request {
     completion: Completion;
     user: User;
   };
+}
+
+enum CompletionSource {
+  OpenAI = "openai",
+  Llama = "llama",
+}
+
+enum OpenAIModel {
+  Davinci = "text-davinci-003",
 }
 
 const authMiddleware = (
@@ -103,39 +115,116 @@ app.post("/user", authMiddleware, async (req: UserRequest, res) => {
       );
     })
     .match(
-      (_ok) => {
-        res.status(200).send();
+      async (_ok) => {
+        return ResultAsync.fromPromise(
+          supabase.from("UserSettings").insert([
+            {
+              id: req.body.id,
+              net_id: req.body.netId,
+              model: OpenAIModel.Davinci,
+              source: CompletionSource.OpenAI,
+              enabled: true,
+            },
+          ]),
+          (error) => {
+            console.log("Failed to add new user settings", error);
+            return error;
+          }
+        ).match(
+          (_ok) => {
+            res.status(200).send();
+          },
+          (err) => {
+            console.error(err);
+            res.status(500).send();
+          }
+        );
       },
-      (_err) => {
+      async (_err) => {
         res.status(500).send();
       }
     );
 });
 
-app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
-  const openai = new OpenAIApi(configuration);
+app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
+    return ResultAsync.fromPromise(
+      supabase.from("UserSettings").select("*").eq("id", req.params.id),
+      (error) => {
+        console.log(error);
+        return error;
+      }
+    ).match(
+      (ok) => {
+        if (!ok.data || ok.data.length === 0) {
+          return res.status(500).send();
+        }
+        return res.status(200).json(ok.data[0]).send();
+      },
+      (err) => {
+        console.error(err);
+        return res.status(500).send();
+      }
+    )
+})
 
-  return ResultAsync.fromPromise(
-    openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: "complete the following code snippet" + req.body.prompt,
-    }),
+app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
+  ResultAsync.fromPromise(
+    supabase.from("UserSettings").select("*").eq("id", req.body.netId),
     (error) => {
       console.log(error);
       return error;
     }
   ).match(
     (ok) => {
-      res
-        .status(200)
-        .json({
-          completion: ok.data.choices[0].text,
-        })
-        .send();
+      const openai = new OpenAIApi(configuration);
+
+      if (!ok.data || ok.data.length === 0) {
+        return res.status(500).send();
+      }
+
+      if (ok.data[0].enabled === false) {
+        return res.status(200).json({
+          completion: null,
+        });
+      }
+
+      if (ok.data[0].source !== CompletionSource.OpenAI) {
+        console.error("requested invalid source");
+        return res.status(500).send();
+      }
+
+      if (![OpenAIModel.Davinci].includes(ok.data[0].model)) {
+        console.error("requested invalid model");
+        return res.status(500).send();
+      }
+
+      return ResultAsync.fromPromise(
+        openai.createCompletion({
+          model: ok.data[0].model,
+          prompt: "complete the following code snippet" + req.body.prompt,
+        }),
+        (error) => {
+          console.log(error);
+          return error;
+        }
+      ).match(
+        (ok) => {
+          res
+            .status(200)
+            .json({
+              completion: ok.data.choices[0].text,
+            })
+            .send();
+        },
+        (err) => {
+          console.error(err);
+          res.status(500).send();
+        }
+      );
     },
     (err) => {
-      console.error(err);
-      res.status(500).send();
+      console.log(err);
+      return err;
     }
   );
 });
@@ -231,7 +320,6 @@ app.get("/version/latest", async (_req, res) => {
   );
 });
 
-
 app.get("/version/latest/download", async (_req, res) => {
   return getLatestVersion().match(
     (ok) => {
@@ -250,19 +338,22 @@ app.get("/version/latest/download", async (_req, res) => {
           return ResultAsync.fromPromise(
             ok.data.arrayBuffer(),
             (error) => error
-
           ).match(
             (ok) => {
-              return res.status(200)
-                .setHeader('Content-Type', 'application/vsix')
-                .setHeader('Content-Disposition', `attachment; filename=pincer-extension-${version}.vsix`)
+              return res
+                .status(200)
+                .setHeader("Content-Type", "application/vsix")
+                .setHeader(
+                  "Content-Disposition",
+                  `attachment; filename=pincer-extension-${version}.vsix`
+                )
                 .send(Buffer.from(ok));
             },
             (err) => {
               console.error(err);
               return res.status(500).send();
             }
-          )
+          );
         },
         async (err) => {
           console.error(err);

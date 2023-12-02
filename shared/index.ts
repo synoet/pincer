@@ -20,6 +20,9 @@ export interface User {
 }
 
 export interface UserSettings {
-  modelId?: string;
+  netId: string;
+  id: string;
+  source: string;
+  model: string;
   enabled: boolean;
 }

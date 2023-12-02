@@ -42,7 +42,7 @@ export async function initializeUser(id: string, netId: string): Promise<void> {
 
 export async function getUserSettings(id: string): Promise<UserSettings | null> {
   return axios
-    .get(`https://pincer-server.fly.dev/user/settings/${id}`, {
+    .get(`https://pincer-server.fly.dev/settings/${id}`, {
       headers: { "auth-key": process.env.AUTH_KEY },
     })
     .then((response) => {

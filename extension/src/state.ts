@@ -19,6 +19,7 @@ class ExtensionState implements ExtensionState {
   events: number[] = [];
   settings: UserSettings | null; 
 
+
   addDocumentEvent(document: DocumentChange) {
     this.changeLog.push(document);
     this.unsavedChanges.push(document);

@@ -69,6 +69,7 @@ export function activate(_: vscode.ExtensionContext) {
   const provider: vscode.InlineCompletionItemProvider = {
     async provideInlineCompletionItems(document, position, _context, _token) {
       if (!NETID) {
+        console.error("NETID is not set");
         return []
       }
 
@@ -118,7 +119,9 @@ export function activate(_: vscode.ExtensionContext) {
       completion = await getCompletion(
         currentContext,
         document.getText(),
-        document.fileName.split(".").pop() || ""
+        document.fileName.split(".").pop() || "",
+        state.user.id,
+        NETID,
       );
       console.log(completion)
 
