@@ -3,7 +3,7 @@
     "inlineCompletionsAdditions"
   ],
   "name": "pincer-extension",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "publisher": "synoet",
   "engines": {
     "vscode": "^1.67.0"
