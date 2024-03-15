@@ -6,7 +6,6 @@ import { getCompletion, syncCompletion } from "./completion";
 import { v4 as uuid } from "uuid";
 import * as mixpanel from "mixpanel";
 import { readVersion } from "./utils";
-import { warn } from "console";
 
 if (!process.env.MIXPANEL_TOKEN) {
   throw new Error("MIXPANEL_TOKEN is not set");
@@ -59,6 +58,7 @@ export function activate(_: vscode.ExtensionContext) {
     version: EXTENSION_VERSION,
     distinct_id: state.user?.id || "no_user",
   });
+
   if (!NETID) {
     mp.track("extension_error", {
       version: EXTENSION_VERSION,
@@ -79,7 +79,7 @@ export function activate(_: vscode.ExtensionContext) {
       }
 
       if (!state.settings) {
-        const settings = await getUserSettings(state.user.id);
+        const settings = await getUserSettings(NETID);
         if (!settings) {
           mp.track("extension_error", {
             description: "settings were not returned from server",
@@ -104,26 +104,25 @@ export function activate(_: vscode.ExtensionContext) {
       };
 
       let currentContext: string = document.getText(
-        new vscode.Range(position.with(undefined, 0), position)
+        new vscode.Range(position.line, 0, position.line, position.character)
       );
 
-      if (documentChange.content.length < 5) {
-        shouldGetCompletion = false;
-      }
-
       state.addDocumentEvent(documentChange);
-      console.log(shouldGetCompletion);
 
-      if (!shouldGetCompletion) return [];
+      // if (!shouldGetCompletion) return [];
 
       completion = await getCompletion(
-        currentContext,
-        document.getText(),
-        document.fileName.split(".").pop() || "",
+        currentContext ?? "",
+        document.getText(new vscode.Range(
+          0,
+          0,
+          position.line,
+          0
+        )) ?? "",
+        document.fileName.split(".").pop() ?? "",
         state.user.id,
         NETID
       );
-      console.log(completion);
 
       if (state.shouldSync()) {
         state.sync();
@@ -149,11 +148,14 @@ export function activate(_: vscode.ExtensionContext) {
         version: EXTENSION_VERSION,
       });
 
+      const finishingLine = position.line + completion.completion.split("\n").length - 1;
+      const finishingCharacter = position.character + completion.completion.split("\n").pop()?.length || 0;
+
       const replaceRange = new vscode.Range(
         position.line,
         position.character,
-        position.line,
-        position.character + completion.completion.length
+        finishingLine,
+        finishingCharacter 
       );
 
       return [

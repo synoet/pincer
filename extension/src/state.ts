@@ -64,7 +64,7 @@ class ExtensionState implements ExtensionState {
 
     if (
       Date.now() - this.events.sort((a, b) => b - a)[this.events.length - 1] >
-      1800
+      200
     ) {
       return true;
     }

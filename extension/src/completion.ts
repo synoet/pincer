@@ -5,17 +5,16 @@ import { Completion, User } from "shared";
 export async function getCompletion(
   input: string,
   context: string,
+  fileExtension: string,
   userId: string,
   netId: string,
-  fileExtension: string
 ): Promise<Completion | null> {
-  console.log(process.env.AUTH_KEY);
   const response = await axios
     .post(
       "https://pincer-server.fly.dev/completion",
       {
         prompt: input,
-        context: context,
+        context: context ?? "",
         fileExtension: fileExtension,
         userId,
         netId,

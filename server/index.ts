@@ -1,6 +1,8 @@
 // Yes I'm aware this file is getting a little messy - synoet
-import morgan from "morgan";
+import axios from "axios";
 import { ResultAsync, err } from "neverthrow";
+import { pinoHttp } from "pino-http";
+import pino from "pino";
 import { v4 as uuidv4 } from "uuid";
 import { Configuration, OpenAIApi } from "openai";
 import express, {
@@ -11,10 +13,19 @@ import express, {
 import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
 import { Completion, User, DocumentChange } from "shared";
+import { prompt } from "./prompt";
+
+const logger = pino({
+  level: 'info',
+  prettifier: require("pino-pretty")(),
+})
+
 
 const app = express();
 app.use(bodyParser.json());
-app.use(morgan("combined"));
+app.use(pinoHttp({
+  logger: logger,
+}))
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -75,7 +86,7 @@ enum CompletionSource {
 }
 
 enum OpenAIModel {
-  Davinci = "text-davinci-003",
+  Turbo35 = "gpt-3.5-turbo"
 }
 
 const authMiddleware = (
@@ -91,15 +102,20 @@ const authMiddleware = (
 };
 
 app.post("/user", authMiddleware, async (req: UserRequest, res) => {
-  return ResultAsync.fromPromise(
+  if (!req.body.netId) {
+    logger.error("Missing netId");
+    return res.status(500).send("missing net id");
+  }
+  return await ResultAsync.fromPromise(
     supabase.from("User").select("*").eq("id", req.body.id),
     (error) => {
-      console.log(error);
+      logger.info(error);
       return error;
     }
   )
     .andThen((response) => {
-      if (response && (response.count ?? 0) > 0) {
+      logger.info(response);
+      if (response && (response?.data?.length ?? 0) > 0) {
         return err("User already exists");
       }
       return ResultAsync.fromPromise(
@@ -109,69 +125,70 @@ app.post("/user", authMiddleware, async (req: UserRequest, res) => {
           },
         ]),
         (error) => {
-          console.log("Failed to add new user", error);
+          logger.info("Failed to add new user", error);
           return error;
         }
       );
     })
     .match(
       async (_ok) => {
-        return ResultAsync.fromPromise(
+        return await ResultAsync.fromPromise(
           supabase.from("UserSettings").insert([
             {
-              id: req.body.id,
               net_id: req.body.netId,
-              model: OpenAIModel.Davinci,
+              model: OpenAIModel.Turbo35,
               source: CompletionSource.OpenAI,
               enabled: true,
             },
           ]),
           (error) => {
-            console.log("Failed to add new user settings", error);
+            logger.error("Failed to add new user settings", error);
             return error;
           }
         ).match(
           (_ok) => {
-            res.status(200).send();
+            return res.status(200).send();
           },
           (err) => {
-            console.error(err);
-            res.status(500).send();
+            req.log.error(err);
+            return res.status(500).send(err);
           }
         );
       },
       async (_err) => {
-        res.status(500).send();
+        return res.status(500).send(_err);
       }
     );
 });
 
 app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
-  return ResultAsync.fromPromise(
-    supabase.from("UserSettings").select("*").eq("id", req.params.id),
+  return await ResultAsync.fromPromise(
+    supabase.from("UserSettings").select("*").eq("net_id", req.params.id),
     (error) => {
-      console.log(error);
+      logger.error(error);
       return error;
     }
   ).match(
     (ok) => {
       if (!ok.data || ok.data.length === 0) {
-        return res.status(500).send();
+        req.log.error("no settings found")
+        return res.status(500).send()
       }
       return res.status(200).json(ok.data[0]).send();
     },
     (err) => {
-      console.error(err);
+      logger.error(err);
+      req.log.error(err);
       return res.status(500).send();
     }
   );
 });
 
 app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
-  ResultAsync.fromPromise(
-    supabase.from("UserSettings").select("*").eq("id", req.body.netId),
+  return await ResultAsync.fromPromise(
+    supabase.from("UserSettings").select("*").eq("net_id", req.body.netId),
     (error) => {
-      console.log(error);
+      logger.error(error);
       return error;
     }
   ).match(
@@ -179,7 +196,7 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
       const openai = new OpenAIApi(configuration);
 
       if (!ok.data || ok.data.length === 0) {
-        return res.status(500).send();
+        return res.status(500).send("no settings found");
       }
 
       if (ok.data[0].enabled === false) {
@@ -189,22 +206,28 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
       }
 
       if (ok.data[0].source !== CompletionSource.OpenAI) {
-        console.error("requested invalid source");
-        return res.status(500).send();
+        logger.error("requested invalid source");
+        return res.status(500).send("invalid source");
       }
 
-      if (![OpenAIModel.Davinci].includes(ok.data[0].model)) {
-        console.error("requested invalid model");
-        return res.status(500).send();
+      if (![OpenAIModel.Turbo35].includes(ok.data[0].model)) {
+        logger.error("requested invalid model");
+        return res.status(500).send("invalid model");
       }
 
       return ResultAsync.fromPromise(
-        openai.createCompletion({
-          model: ok.data[0].model,
-          prompt: "complete the following code snippet" + req.body.prompt,
+        axios.post("http://184.105.3.216:8000/process_prompt", {
+          prompt: prompt(req.body.prompt, req.body.context, req.body.fileExtension),
+        	model: "gpt-3.5-turbo",
+          max_tokens: 1000,
+        }, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openaiKey}`
+          },
         }),
         (error) => {
-          console.log(error);
+          logger.info(error);
           return error;
         }
       ).match(
@@ -212,18 +235,19 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
           res
             .status(200)
             .json({
-              completion: ok.data.choices[0].text,
+              completion: ok.data.response,
             })
             .send();
         },
         (err) => {
-          console.error(err);
-          res.status(500).send();
+          logger.error(err);
+          req.log.error(err);
+          return res.status(500).send();
         }
       );
     },
     (err) => {
-      console.log(err);
+      logger.info(err);
       return err;
     }
   );
@@ -232,16 +256,16 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
 app.post("/sync/documents", async (req: DocumentRequest, res) => {
   const { documents, user } = req.body;
   if (!documents) {
-    console.error("Missing documents");
+    logger.error("Missing documents");
     return res.status(500).send();
   }
 
   if (!user) {
-    console.error("Missing user");
+    logger.error("Missing user");
     return res.status(500).send();
   }
 
-  ResultAsync.combine(
+  return await ResultAsync.combine(
     documents.map((doc: DocumentChange) =>
       ResultAsync.fromPromise(
         supabase.from("Document").insert([
@@ -254,7 +278,7 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
           },
         ]),
         (error) => {
-          console.error(error);
+          logger.error(error);
           return error;
         }
       )
@@ -264,7 +288,7 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
       res.status(200).send("ok");
     },
     (err) => {
-      console.error(err);
+      logger.error(err);
       res.status(500).send();
     }
   );
@@ -276,7 +300,7 @@ app.post(
   async (req: CompletionSyncRequest, res) => {
     const { completion, user } = req.body;
 
-    return ResultAsync.fromPromise(
+    return await ResultAsync.fromPromise(
       supabase.from("Completion").upsert([
         {
           id: completion.id,
@@ -292,11 +316,11 @@ app.post(
       (error) => error
     ).match(
       (_ok) => {
-        res.status(200).send();
+        return res.status(200).send();
       },
       (err) => {
-        console.error(err);
-        res.status(500).send();
+        logger.error(err);
+        return res.status(500).send();
       }
     );
   }
@@ -311,17 +335,17 @@ const getLatestVersion = () =>
 app.get("/version/latest", async (_req, res) => {
   return getLatestVersion().match(
     (ok) => {
-      res.status(200).send(ok?.data?.at(0).version);
+      return res.status(200).send(ok?.data?.at(0).version);
     },
     (err) => {
-      console.error(err);
-      res.status(500).send();
+      logger.error(err);
+      return res.status(500).send();
     }
   );
 });
 
 app.get("/version/latest/download", async (_req, res) => {
-  return getLatestVersion().match(
+  return await getLatestVersion().match(
     (ok) => {
       const version = ok?.data?.at(0).version;
       if (!version) {
@@ -350,20 +374,20 @@ app.get("/version/latest/download", async (_req, res) => {
                 .send(Buffer.from(ok));
             },
             (err) => {
-              console.error(err);
-              return res.status(500).send();
+              logger.error(err);
+              return res.status(500).send(err);
             }
           );
         },
         async (err) => {
-          console.error(err);
-          return res.status(500).send();
+          logger.error(err);
+          return res.status(500).send(err);
         }
       );
     },
     (err) => {
-      console.error(err);
-      return res.status(500).send();
+      logger.error(err);
+      return res.status(500).send(err);
     }
   );
 });
@@ -373,5 +397,5 @@ app.get("/health", (_req, res) => {
 });
 
 app.listen(8000, "0.0.0.0", () => {
-  console.log("Server started on port 8000");
+  logger.info("Server started on port 8000");
 });
