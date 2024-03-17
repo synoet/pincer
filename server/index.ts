@@ -1,10 +1,7 @@
-// Yes I'm aware this file is getting a little messy - synoet
-import axios from "axios";
 import { ResultAsync, err } from "neverthrow";
 import { pinoHttp } from "pino-http";
 import pino from "pino";
 import { v4 as uuidv4 } from "uuid";
-import { Configuration, OpenAIApi } from "openai";
 import express, {
   NextFunction,
   Request,
@@ -13,23 +10,25 @@ import express, {
 import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
 import { Completion, User, DocumentChange } from "shared";
-import { prompt } from "./prompt";
+import { CompletionSource } from "./types";
+import { constructOpenAICompletionRequest } from "./completion";
 
 const logger = pino({
-  level: 'info',
+  level: "info",
   prettifier: require("pino-pretty")(),
-})
-
+});
 
 const app = express();
 app.use(bodyParser.json());
-app.use(pinoHttp({
-  logger: logger,
-}))
+app.use(
+  pinoHttp({
+    logger: logger,
+  }),
+);
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const openaiKey = process.env.OPENAI_API_KEY;
+export const supabaseUrl = process.env.SUPABASE_URL;
+export const supabaseKey = process.env.SUPABASE_KEY;
+export const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 if (!supabaseKey) {
   throw new Error("Missing SUPABASE_KEY env variable");
@@ -39,15 +38,11 @@ if (!supabaseUrl) {
   throw new Error("Missing SUPABASE_URL env variable");
 }
 
-if (!openaiKey) {
+if (!OPENAI_API_KEY) {
   throw new Error("Missing OPENAI_API_KEY env variable");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
-
-const configuration = new Configuration({
-  apiKey: openaiKey,
-});
 
 interface UserRequest extends Request {
   body: {
@@ -80,19 +75,10 @@ interface CompletionSyncRequest extends Request {
   };
 }
 
-enum CompletionSource {
-  OpenAI = "openai",
-  Llama = "llama",
-}
-
-enum OpenAIModel {
-  Turbo35 = "gpt-3.5-turbo"
-}
-
 const authMiddleware = (
   req: Request,
   res: ExpressResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const authKey = req.headers["auth-key"];
   if (!authKey || authKey !== process.env.AUTH_KEY) {
@@ -103,7 +89,7 @@ const authMiddleware = (
 
 app.post("/user", authMiddleware, async (req: UserRequest, res) => {
   if (!req.body.netId) {
-    logger.error("Missing netId");
+    logger.error("missing netid in the request body");
     return res.status(500).send("missing net id");
   }
   return await ResultAsync.fromPromise(
@@ -111,7 +97,7 @@ app.post("/user", authMiddleware, async (req: UserRequest, res) => {
     (error) => {
       logger.info(error);
       return error;
-    }
+    },
   )
     .andThen((response) => {
       logger.info(response);
@@ -127,7 +113,7 @@ app.post("/user", authMiddleware, async (req: UserRequest, res) => {
         (error) => {
           logger.info("Failed to add new user", error);
           return error;
-        }
+        },
       );
     })
     .match(
@@ -144,7 +130,7 @@ app.post("/user", authMiddleware, async (req: UserRequest, res) => {
           (error) => {
             logger.error("Failed to add new user settings", error);
             return error;
-          }
+          },
         ).match(
           (_ok) => {
             return res.status(200).send();
@@ -152,12 +138,12 @@ app.post("/user", authMiddleware, async (req: UserRequest, res) => {
           (err) => {
             req.log.error(err);
             return res.status(500).send(err);
-          }
+          },
         );
       },
       async (_err) => {
         return res.status(500).send(_err);
-      }
+      },
     );
 });
 
@@ -167,12 +153,12 @@ app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
     (error) => {
       logger.error(error);
       return error;
-    }
+    },
   ).match(
     (ok) => {
       if (!ok.data || ok.data.length === 0) {
-        req.log.error("no settings found")
-        return res.status(500).send()
+        req.log.error("no settings found");
+        return res.status(500).send();
       }
       return res.status(200).json(ok.data[0]).send();
     },
@@ -180,9 +166,12 @@ app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
       logger.error(err);
       req.log.error(err);
       return res.status(500).send();
-    }
+    },
   );
 });
+
+// Settings
+// completion endpoint
 
 app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
   return await ResultAsync.fromPromise(
@@ -190,47 +179,46 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
     (error) => {
       logger.error(error);
       return error;
-    }
+    },
   ).match(
     (ok) => {
-      const openai = new OpenAIApi(configuration);
-
       if (!ok.data || ok.data.length === 0) {
+        logger.error(`no settings found for user ${req.body.netId}`);
         return res.status(500).send("no settings found");
       }
 
       if (ok.data[0].enabled === false) {
+        logger.info(`user ${req.body.netId} has completion disabled`);
         return res.status(200).json({
           completion: null,
         });
       }
 
-      if (ok.data[0].source !== CompletionSource.OpenAI) {
-        logger.error("requested invalid source");
-        return res.status(500).send("invalid source");
-      }
+      const source = ok.data[0].source;
 
-      if (![OpenAIModel.Turbo35].includes(ok.data[0].model)) {
-        logger.error("requested invalid model");
-        return res.status(500).send("invalid model");
-      }
+      let request: Promise<any>;
 
-      return ResultAsync.fromPromise(
-        axios.post("http://184.105.3.216:8000/process_prompt", {
-          prompt: prompt(req.body.prompt, req.body.context, req.body.fileExtension),
-        	model: "gpt-3.5-turbo",
-          max_tokens: 1000,
-        }, {
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${openaiKey}`
-          },
-        }),
-        (error) => {
-          logger.info(error);
-          return error;
+      switch (source) {
+        case CompletionSource.OpenAI: {
+          request = constructOpenAICompletionRequest({
+            prompt: req.body.prompt,
+            context: req.body.context,
+            model: ok.data[0].model,
+            fileExtension: req.body.fileExtension,
+            maxTokens: 1000,
+          });
+          break;
         }
-      ).match(
+        default: {
+          logger.error("requested invalid source");
+          return res.status(500).send("invalid source");
+        }
+      }
+
+      return ResultAsync.fromPromise(request, (error) => {
+        logger.info(error);
+        return error;
+      }).match(
         (ok) => {
           res
             .status(200)
@@ -243,13 +231,13 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
           logger.error(err);
           req.log.error(err);
           return res.status(500).send();
-        }
+        },
       );
     },
     (err) => {
       logger.info(err);
       return err;
-    }
+    },
   );
 });
 
@@ -280,9 +268,9 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
         (error) => {
           logger.error(error);
           return error;
-        }
-      )
-    )
+        },
+      ),
+    ),
   ).match(
     (_ok) => {
       res.status(200).send("ok");
@@ -290,7 +278,7 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
     (err) => {
       logger.error(err);
       res.status(500).send();
-    }
+    },
   );
 });
 
@@ -313,7 +301,7 @@ app.post(
           input: completion.input,
         },
       ]),
-      (error) => error
+      (error) => error,
     ).match(
       (_ok) => {
         return res.status(200).send();
@@ -321,15 +309,15 @@ app.post(
       (err) => {
         logger.error(err);
         return res.status(500).send();
-      }
+      },
     );
-  }
+  },
 );
 
 const getLatestVersion = () =>
   ResultAsync.fromPromise(
     supabase.from("Version").select("*").eq("latest", true).limit(1),
-    (error) => error
+    (error) => error,
   );
 
 app.get("/version/latest", async (_req, res) => {
@@ -340,7 +328,7 @@ app.get("/version/latest", async (_req, res) => {
     (err) => {
       logger.error(err);
       return res.status(500).send();
-    }
+    },
   );
 });
 
@@ -355,13 +343,13 @@ app.get("/version/latest/download", async (_req, res) => {
         supabase.storage
           .from("extension-bin")
           .download(`pincer-extension-${version}.vsix`),
-        (error) => error
+        (error) => error,
       ).match(
         async (ok) => {
           if (!ok.data) return res.status(500).send();
           return ResultAsync.fromPromise(
             ok.data.arrayBuffer(),
-            (error) => error
+            (error) => error,
           ).match(
             (ok) => {
               return res
@@ -369,26 +357,26 @@ app.get("/version/latest/download", async (_req, res) => {
                 .setHeader("Content-Type", "application/vsix")
                 .setHeader(
                   "Content-Disposition",
-                  `attachment; filename=pincer-extension-${version}.vsix`
+                  `attachment; filename=pincer-extension-${version}.vsix`,
                 )
                 .send(Buffer.from(ok));
             },
             (err) => {
               logger.error(err);
               return res.status(500).send(err);
-            }
+            },
           );
         },
         async (err) => {
           logger.error(err);
           return res.status(500).send(err);
-        }
+        },
       );
     },
     (err) => {
       logger.error(err);
       return res.status(500).send(err);
-    }
+    },
   );
 });
 
