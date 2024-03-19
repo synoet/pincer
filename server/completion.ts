@@ -1,7 +1,7 @@
 import { get_encoding } from "tiktoken";
 import axios from "axios";
 import { OPENAI_API_KEY } from ".";
-import { constructPrompt } from "./prompt";
+import { DEFAULT_CONFIGURATION } from "./types";
 
 const OPEN_AI_MAX_TOKENS = 200;
 const PROMPT_TOKENS = 140;
@@ -32,17 +32,37 @@ export function constructOpenAICompletionRequest({
     context = trimmedContext;
   }
 
-  const fullPrompt = constructPrompt(prompt, context, fileExtension);
   const headers = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${OPENAI_API_KEY}`,
+    "Authorization": `Bearer ${OPENAI_API_KEY}`,
   };
 
+  const messages = [
+    {
+      role: "system",
+      content: `1. Complete the code provided, using the code provided.
+                2. DO NOT RE-INCLUDE THE CODE PROVIDED IN YOUR ANSWER.
+                3. DO NOT EXPLAIN ANYTHING
+                4. ONLY return code, do not explain anything
+                5. Your completion should start with the character after the code provided
+                6. Use the following language ${fileExtension}
+                Here is some context to help you get started:\n ${context}`,
+    },
+    {
+      role: "user",
+      content: prompt
+    }
+  ]
+
   const body = {
-    prompt: fullPrompt,
-    model,
-    max_tokens: OPEN_AI_MAX_TOKENS,
+    messages,
+    model: DEFAULT_CONFIGURATION.model,
+    max_tokens: 512,
   };
+
+
+  console.log(headers)
+  console.log(body)
 
   return axios.post("https://api.openai.com/v1/chat/completions", body, {
     headers,
