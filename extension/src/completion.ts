@@ -11,7 +11,7 @@ export async function getCompletion(
 ): Promise<Completion | null> {
   const response = await axios
     .post(
-      "https://pincer-server.fly.dev/completion",
+      `${process.env.BASE_URL}/completion`,
       {
         prompt: input,
         context: context ?? "",
@@ -45,7 +45,7 @@ export async function syncCompletion(
   user: User
 ): Promise<void> {
   axios
-    .post("https://pincer-server.fly.dev/sync/completion", {
+    .post(`${process.env.BASE_URL}/sync/completion`, {
       completion: completion,
       user: user,
     })

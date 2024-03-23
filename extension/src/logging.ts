@@ -3,7 +3,7 @@ import axios from "axios";
 export class Logger {
   info(message: string) {
     axios.post(
-      "https://pincer-server.fly.dev/log",
+      `${process.env.BASE_URL}/log`,
       {
         data: message,
         level: "info",
@@ -13,7 +13,7 @@ export class Logger {
   }
   warn(message: string) {
     axios.post(
-      "https://pincer-server.fly.dev/log",
+      `${process.env.BASE_URL}/log`,
       {
         data: message,
         level: "warn",
@@ -23,7 +23,7 @@ export class Logger {
   }
   error(message: string) {
     axios.post(
-      "https://pincer-server.fly.dev/log",
+      `${process.env.BASE_URL}/log`,
       {
         data: message,
         level: "error",

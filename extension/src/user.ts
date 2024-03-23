@@ -34,7 +34,7 @@ export function getOrCreateUser(): Promise<User> {
 
 export async function initializeUser(id: string, netId: string): Promise<void> {
   await axios.post(
-    "https://pincer-server.fly.dev/user",
+    `${process.env.BASE_URL}/user`,
     { id: id, netId: netId },
     { headers: { "auth-key": process.env.AUTH_KEY } }
   );
@@ -44,7 +44,7 @@ export async function getUserSettings(
   id: string
 ): Promise<UserSettings | null> {
   return axios
-    .get(`https://pincer-server.fly.dev/settings/${id}`, {
+    .get(`${process.env.BASE_URL}/settings/${id}`, {
       headers: { "auth-key": process.env.AUTH_KEY },
     })
     .then((response) => {

@@ -10,7 +10,7 @@ import express, {
 import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
 import { Completion, User, DocumentChange } from "shared";
-import { CompletionSource, CompletionType, DEFAULT_CONFIGURATION } from "./types";
+import { CompletionType, DEFAULT_CONFIGURATION } from "./types";
 import { constructChatCompletionRequest, constructTextCompletionRequest } from "./completion";
 import * as dotenv from "dotenv";
 

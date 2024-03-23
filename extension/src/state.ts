@@ -40,7 +40,7 @@ class ExtensionState implements ExtensionState {
   async sync() {
     return axios
       .post(
-        "https://pincer-server.fly.dev/sync/documents",
+        `${process.env.BASE_URL}/sync/documents`,
         {
           documents: this.unsavedChanges,
           user: this.user,
