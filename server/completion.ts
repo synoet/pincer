@@ -1,22 +1,24 @@
 import { get_encoding } from "tiktoken";
-import axios from "axios";
+import fetch from "node-fetch";
 import { OPENAI_API_KEY } from ".";
-import { DEFAULT_CONFIGURATION } from "./types";
+import { constructPrompt } from "./prompt";
 
 const OPEN_AI_MAX_TOKENS = 200;
 const PROMPT_TOKENS = 140;
 const encoding = get_encoding("gpt2");
 
-export function constructOpenAICompletionRequest({
+export async function constructChatCompletionRequest({
   prompt,
   context,
   model,
+  url,
   fileExtension,
   maxTokens,
 }: {
   prompt: string;
   context: string;
   model: string;
+  url: string;
   fileExtension: string;
   maxTokens: number;
 }) {
@@ -56,17 +58,70 @@ export function constructOpenAICompletionRequest({
 
   const body = {
     messages,
-    model: DEFAULT_CONFIGURATION.model,
-    max_tokens: 512,
+    model,
+    max_tokens: 120,
   };
 
-
-  console.log(headers)
-  console.log(body)
-
-  return axios.post("https://api.openai.com/v1/chat/completions", body, {
+  const res = await fetch(url, {
+    method: "POST",
     headers,
+    body: JSON.stringify(body),
   });
+
+  const data: any = await res.json()
+  return data.choices[0]?.message?.content;
+}
+
+export async function constructTextCompletionRequest({
+  prompt,
+  url,
+  context,
+  model,
+  fileExtension,
+  maxTokens,
+}: {
+  prompt: string;
+  context: string;
+  url: string;
+  model: string;
+  fileExtension: string;
+  maxTokens: number;
+}) {
+
+  const promptTokenCount = countTokens(prompt);
+  const contextTokenCount = countTokens(context);
+
+  const totalTokens =
+    promptTokenCount + OPEN_AI_MAX_TOKENS + PROMPT_TOKENS + contextTokenCount;
+
+  if (totalTokens > maxTokens) {
+    const overflow = totalTokens - maxTokens;
+    const trimmedContext = trimToTokens(context, contextTokenCount - overflow);
+    context = trimmedContext;
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${OPENAI_API_KEY}`,
+  };
+
+  const constructedPrompt = constructPrompt(prompt, context, fileExtension)
+
+  const body = {
+    prompt: constructedPrompt,
+    model: model,
+    max_tokens: 120,
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+
+  const data: any = await res.json()
+  return data.choices[0]?.text;
 }
 
 function countTokens(text: string): number {
