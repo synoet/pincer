@@ -8,7 +8,6 @@ export type Message = {
   content: string;
 };
 
-
 export enum Models {
   GPT3 = "gpt-3.5-turbo-0125",
   Davinci = "davinci",
@@ -19,4 +18,4 @@ export const DEFAULT_CONFIGURATION = {
   completionType: CompletionType.Chat,
   model: Models.GPT3,
   maxTokens: 2000,
-}
+};

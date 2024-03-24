@@ -36,7 +36,7 @@ export async function constructChatCompletionRequest({
 
   const headers = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${OPENAI_API_KEY}`,
+    Authorization: `Bearer ${OPENAI_API_KEY}`,
   };
 
   const messages = [
@@ -52,9 +52,9 @@ export async function constructChatCompletionRequest({
     },
     {
       role: "user",
-      content: prompt
-    }
-  ]
+      content: prompt,
+    },
+  ];
 
   const body = {
     messages,
@@ -68,7 +68,7 @@ export async function constructChatCompletionRequest({
     body: JSON.stringify(body),
   });
 
-  const data: any = await res.json()
+  const data: any = await res.json();
   return data.choices[0]?.message?.content;
 }
 
@@ -87,7 +87,6 @@ export async function constructTextCompletionRequest({
   fileExtension: string;
   maxTokens: number;
 }) {
-
   const promptTokenCount = countTokens(prompt);
   const contextTokenCount = countTokens(context);
 
@@ -102,10 +101,10 @@ export async function constructTextCompletionRequest({
 
   const headers = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${OPENAI_API_KEY}`,
+    Authorization: `Bearer ${OPENAI_API_KEY}`,
   };
 
-  const constructedPrompt = constructPrompt(prompt, context, fileExtension)
+  const constructedPrompt = constructPrompt(prompt, context, fileExtension);
 
   const body = {
     prompt: constructedPrompt,
@@ -119,8 +118,7 @@ export async function constructTextCompletionRequest({
     body: JSON.stringify(body),
   });
 
-
-  const data: any = await res.json()
+  const data: any = await res.json();
   return data.choices[0]?.text;
 }
 

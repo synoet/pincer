@@ -11,7 +11,10 @@ import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
 import { Completion, User, DocumentChange } from "shared";
 import { CompletionType, DEFAULT_CONFIGURATION } from "./types";
-import { constructChatCompletionRequest, constructTextCompletionRequest } from "./completion";
+import {
+  constructChatCompletionRequest,
+  constructTextCompletionRequest,
+} from "./completion";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -174,7 +177,6 @@ app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
   );
 });
 
-
 app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
   return await ResultAsync.fromPromise(
     supabase.from("UserSettings").select("*").eq("net_id", req.body.netId),
@@ -196,13 +198,14 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
         });
       }
 
-
       const completionType = ok.data[0].completion_type;
       const model = ok.data[0].model;
       const url = ok.data[0].url;
       const maxTokens = ok.data[0].max_tokens;
 
-      logger.info(`user ${req.body.netId} has completion enabled with model ${model} and completion type ${completionType}`);
+      logger.info(
+        `user ${req.body.netId} has completion enabled with model ${model} and completion type ${completionType}`,
+      );
 
       let request: Promise<any>;
 
@@ -247,7 +250,7 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
             .send();
         },
         (err) => {
-          logger.error(err)
+          logger.error(err);
           return res.status(500).send();
         },
       );
