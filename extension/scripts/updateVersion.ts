@@ -1,6 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { execSync } from "child_process";
+import * as dotenv from "dotenv";
 import * as fs from "fs";
+
+dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
