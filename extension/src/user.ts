@@ -34,9 +34,8 @@ export function getOrCreateUser(): Promise<User> {
 
 export async function initializeUser(id: string, netId: string): Promise<void> {
   await axios.post(
-    `${process.env.BASE_URL}/user`,
+    `${process.env['BASE_URL']}/user`,
     { id: id, netId: netId },
-    { headers: { "auth-key": process.env.AUTH_KEY } }
   );
 }
 
@@ -44,8 +43,7 @@ export async function getUserSettings(
   id: string
 ): Promise<UserSettings | null> {
   return axios
-    .get(`${process.env.BASE_URL}/settings/${id}`, {
-      headers: { "auth-key": process.env.AUTH_KEY },
+    .get(`${process.env['BASE_URL']}/settings/${id}`, {
     })
     .then((response) => {
       return response.data;

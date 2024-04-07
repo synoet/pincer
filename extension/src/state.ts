@@ -40,12 +40,11 @@ class ExtensionState implements ExtensionState {
   async sync() {
     return axios
       .post(
-        `${process.env.BASE_URL}/sync/documents`,
+        `${process.env['BASE_URL']}/sync/documents`,
         {
           documents: this.unsavedChanges,
           user: this.user,
         },
-        { headers: { "auth-key": process.env.AUTH_KEY } }
       )
       .then((_) => {
         this.unsavedChanges = [];

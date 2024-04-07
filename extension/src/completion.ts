@@ -11,7 +11,7 @@ export async function getCompletion(
 ): Promise<Completion | null> {
   const response = await axios
     .post(
-      `${process.env.BASE_URL}/completion`,
+      `${process.env['BASE_URL']}/completion`,
       {
         prompt: input,
         context: context ?? "",
@@ -19,7 +19,6 @@ export async function getCompletion(
         userId,
         netId,
       },
-      { headers: { "auth-key": process.env.AUTH_KEY } }
     )
     .catch((error) => {
       console.error(error);
@@ -45,7 +44,7 @@ export async function syncCompletion(
   user: User
 ): Promise<void> {
   axios
-    .post(`${process.env.BASE_URL}/sync/completion`, {
+    .post(`${process.env['BASE_URL']}/sync/completion`, {
       completion: completion,
       user: user,
     })

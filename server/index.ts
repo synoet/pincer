@@ -269,13 +269,13 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
 app.post("/sync/documents", async (req: DocumentRequest, res) => {
   const { documents, user } = req.body;
   if (!documents) {
-    logger.error("Missing documents");
-    return res.status(500).send();
+    logger.error("No documents provided")
+    return res.status(500).send("No documents provided");
   }
 
   if (!user) {
-    logger.error("Missing user");
-    return res.status(500).send();
+    console.error("Missing user");
+    return res.status(500).send("No document provided");
   }
 
   return await ResultAsync.combine(
@@ -287,7 +287,7 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
             timestamp: doc.timestamp,
             content: doc.content,
             filePath: doc.filePath,
-            userId: user.id,
+            net_id: user.id,
           },
         ]),
         (error) => {
@@ -302,6 +302,7 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
     },
     (err) => {
       logger.error(err);
+      console.error(err);
       res.status(500).send();
     },
   );

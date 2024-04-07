@@ -74,8 +74,7 @@ export function activate(_: vscode.ExtensionContext) {
       }
 
       if (!state.user) {
-        state.user = await getOrCreateUser();
-        initializeUser(state.user.id, NETID);
+        state.user = { id: NETID };
       }
 
       if (!state.settings) {
