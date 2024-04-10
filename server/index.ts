@@ -1,5 +1,6 @@
-import { ResultAsync, err } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import { pinoHttp } from "pino-http";
+import * as debounce from "lodash.debounce";
 import pino from "pino";
 import { v4 as uuidv4 } from "uuid";
 import express, {
@@ -9,7 +10,7 @@ import express, {
 } from "express";
 import bodyParser from "body-parser";
 import { createClient } from "@supabase/supabase-js";
-import { Completion, User, DocumentChange } from "shared";
+import { Completion, DocumentChange } from "shared";
 import { CompletionType, DEFAULT_CONFIGURATION } from "./types";
 import {
   constructChatCompletionRequest,
@@ -49,13 +50,6 @@ if (!OPENAI_API_KEY) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-interface UserRequest extends Request {
-  body: {
-    id: string;
-    netId: string;
-  };
-}
-
 interface CompletionRequest extends Request {
   body: {
     id: string;
@@ -66,17 +60,26 @@ interface CompletionRequest extends Request {
   };
 }
 
+interface SessionRequest extends Request {
+  body: {
+    sessionId: string;
+    netId: string;
+  }
+}
+
 interface DocumentRequest extends Request {
   body: {
     documents: DocumentChange[];
-    user: User;
+    netId: string;
+    sessionId: string;
   };
 }
 
 interface CompletionSyncRequest extends Request {
   body: {
     completion: Completion;
-    user: User;
+    sessionId: string;
+    netId: string;
   };
 }
 
@@ -94,68 +97,6 @@ const authMiddleware = (
 
 app.get("/health", async (_req, res) => {
   return res.status(200).send("ok");
-});
-
-app.post("/user", authMiddleware, async (req: UserRequest, res) => {
-  if (!req.body.netId) {
-    logger.error("missing netid in the request body");
-    return res.status(500).send("missing net id");
-  }
-  return await ResultAsync.fromPromise(
-    supabase.from("User").select("*").eq("id", req.body.id),
-    (error) => {
-      logger.info(error);
-      return error;
-    },
-  )
-    .andThen((response) => {
-      logger.info(response);
-      if (response && (response?.data?.length ?? 0) > 0) {
-        return err("User already exists");
-      }
-      return ResultAsync.fromPromise(
-        supabase.from("User").insert([
-          {
-            id: req.body.id,
-          },
-        ]),
-        (error) => {
-          logger.info("Failed to add new user", error);
-          return error;
-        },
-      );
-    })
-    .match(
-      async (_ok) => {
-        return await ResultAsync.fromPromise(
-          supabase.from("UserSettings").insert([
-            {
-              net_id: req.body.netId,
-              model: DEFAULT_CONFIGURATION.model,
-              url: DEFAULT_CONFIGURATION.url,
-              max_tokens: DEFAULT_CONFIGURATION.maxTokens,
-              completion_type: DEFAULT_CONFIGURATION.completionType,
-              enabled: true,
-            },
-          ]),
-          (error) => {
-            logger.error("Failed to add new user settings", error);
-            return error;
-          },
-        ).match(
-          (_ok) => {
-            return res.status(200).send();
-          },
-          (err) => {
-            req.log.error(err);
-            return res.status(500).send(err);
-          },
-        );
-      },
-      async (_err) => {
-        return res.status(500).send(_err);
-      },
-    );
 });
 
 app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
@@ -181,12 +122,62 @@ app.get("/settings/:id", authMiddleware, async (req: Request, res) => {
   );
 });
 
+app.post("/session/start", async (req: SessionRequest, res) => {
+  return await ResultAsync.fromPromise(
+    supabase.from("Session").upsert([
+      {
+        id: req.body.sessionId,
+        net_id: req.body.netId, 
+        start_time: Date.now(),
+        end_time: null,
+      }
+    ]),
+    (error) => {
+      logger.error(error);
+      return res.status(500).send("Failed to create session")
+    }
+  ).match(
+    (_ok) => {
+      return res.status(200).send("ok");
+    },
+    (err) => {
+      logger.error(err);
+      return res.status(500).send("Failed to create session");
+    }
+  );
+});
+
+app.post("/session/end", async (req: SessionRequest, res) => {
+  return await ResultAsync.fromPromise(
+    supabase.from("Session").update([
+      {
+        id: req.body.sessionId,
+        net_id: req.body.netId, 
+        end_time: Date.now(),
+      }
+    ]),
+    (error) => {
+      logger.error(error);
+      return res.status(500).send("Failed to create session")
+    }
+  ).match(
+    (_ok) => {
+      return res.status(200).send("ok");
+    },
+    (err) => {
+      logger.error(err);
+      return res.status(500).send("Failed to create session");
+    }
+  );
+})
+
+
 app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
   return await ResultAsync.fromPromise(
     supabase.from("UserSettings").select("*").eq("net_id", req.body.netId),
     (error) => {
       logger.error(error);
-      return error;
+      return res.status(500).send("Failed to fetch user settings");
     },
   ).match(
     (ok) => {
@@ -261,20 +252,20 @@ app.post("/completion", authMiddleware, async (req: CompletionRequest, res) => {
     },
     (err) => {
       logger.info(err);
-      return err;
+      return res.status(500).send();
     },
   );
 });
 
 app.post("/sync/documents", async (req: DocumentRequest, res) => {
-  const { documents, user } = req.body;
+  const { documents, netId } = req.body;
   if (!documents) {
     logger.error("No documents provided")
     return res.status(500).send("No documents provided");
   }
 
-  if (!user) {
-    console.error("Missing user");
+  if (!netId) {
+    console.error("Missing netId");
     return res.status(500).send("No document provided");
   }
 
@@ -286,8 +277,9 @@ app.post("/sync/documents", async (req: DocumentRequest, res) => {
             id: uuidv4(),
             timestamp: doc.timestamp,
             content: doc.content,
-            filePath: doc.filePath,
-            net_id: user.id,
+            file_path: doc.filePath,
+            net_id: netId,
+            session_id: req.body.sessionId,
           },
         ]),
         (error) => {
@@ -312,7 +304,7 @@ app.post(
   "/sync/completion",
   authMiddleware,
   async (req: CompletionSyncRequest, res) => {
-    const { completion, user } = req.body;
+    const { completion, netId } = req.body;
 
     return await ResultAsync.fromPromise(
       supabase.from("Completion").upsert([
@@ -320,10 +312,12 @@ app.post(
           id: completion.id,
           timestamp: completion.timestamp,
           completion: completion.completion,
-          userId: user.id,
+          accepted_char: completion.completion.length,
+          net_id: netId,
+          session_id: req.body.sessionId,
           accepted: completion.accepted,
           language: completion.language,
-          acceptedTimestamp: completion.acceptedTimestamp,
+          accepted_timestamp: completion.acceptedTimestamp,
           input: completion.input,
         },
       ]),

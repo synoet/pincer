@@ -66,10 +66,11 @@ export async function constructChatCompletionRequest({
     method: "POST",
     headers,
     body: JSON.stringify(body),
-  });
+  })
 
   const data: any = await res.json();
-  return data.choices[0]?.message?.content;
+
+  return data?.choices[0]?.message?.content;
 }
 
 export async function constructTextCompletionRequest({

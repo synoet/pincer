@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
+import debounce from "lodash.debounce";
 import { ExtensionState } from "./state";
 import { DocumentChange, Completion } from "shared";
-import { getOrCreateUser, initializeUser, getUserSettings } from "./user";
+import { getUserSettings } from "./user";
 import { getCompletion, syncCompletion } from "./completion";
 import { v4 as uuid } from "uuid";
-import * as mixpanel from "mixpanel";
+import mixpanel from "mixpanel";
 import { readVersion } from "./utils";
+import { endSession, startSession } from "./session";
 
 if (!process.env.MIXPANEL_TOKEN) {
   throw new Error("MIXPANEL_TOKEN is not set");
@@ -17,7 +19,8 @@ let state: ExtensionState = new ExtensionState();
 let mp = mixpanel.init(process.env.MIXPANEL_TOKEN);
 
 function onDidAcceptCompletion(completion: Completion) {
-  if (!state.user) {
+  if (!state.netId) {
+    console.error(`User was not found in local state`)
     mp.track("extension_error", {
       description:
         "completion was accepted but user was not found in local state",
@@ -32,6 +35,9 @@ function onDidAcceptCompletion(completion: Completion) {
   const acceptedCompletion = state.setCompletionAsTaken(completion.id);
 
   if (!acceptedCompletion) {
+    console.error(
+      `Completion was accepted but was not found in local state: ${completion.id}`
+    );
     mp.track("extension_error", {
       description: "completion was accepted but was not found in local state",
       completion: completion.completion,
@@ -43,27 +49,29 @@ function onDidAcceptCompletion(completion: Completion) {
   }
 
   mp.track("completion_accepted", {
-    distinct_id: state.user.id,
+    distinct_id: state.netId,
     completion: completion.completion,
     completion_id: completion.id,
     language: completion.language,
     version: EXTENSION_VERSION,
   });
 
-  syncCompletion(acceptedCompletion, state.user);
+  syncCompletion(acceptedCompletion, state.netId, state.id);
 }
+
+const debouncedGetCompletion = debounce(getCompletion, 300);
 
 export function activate(_: vscode.ExtensionContext) {
   mp.track("extension_activated", {
     version: EXTENSION_VERSION,
-    distinct_id: state.user?.id || "no_user",
+    distinct_id: state.netId || "no_user",
   });
 
   if (!NETID) {
     mp.track("extension_error", {
       version: EXTENSION_VERSION,
       description: "NETID is not set",
-      distinct_id: state.user?.id || "no_user",
+      distinct_id: state.netId || "no_user",
     });
   }
   const provider: vscode.InlineCompletionItemProvider = {
@@ -74,7 +82,8 @@ export function activate(_: vscode.ExtensionContext) {
       }
 
       if (!state.user) {
-        state.user = { id: NETID };
+        state.netId = NETID;
+        startSession(NETID, state.id);
       }
 
       if (!state.settings) {
@@ -82,7 +91,7 @@ export function activate(_: vscode.ExtensionContext) {
         if (!settings) {
           mp.track("extension_error", {
             description: "settings were not returned from server",
-            user_id: state.user.id,
+            user_id: state.netId,
             version: EXTENSION_VERSION,
           });
           return [];
@@ -91,8 +100,6 @@ export function activate(_: vscode.ExtensionContext) {
         state.settings = settings;
       }
 
-      let shouldGetCompletion: boolean =
-        state.settings.enabled && state.shouldGetCompletion();
       let completion: Completion | null = null;
 
       let documentChange: DocumentChange = {
@@ -108,9 +115,7 @@ export function activate(_: vscode.ExtensionContext) {
 
       state.addDocumentEvent(documentChange);
 
-      // if (!shouldGetCompletion) return [];
-
-      completion = await getCompletion(
+      completion = await debouncedGetCompletion(
         currentContext ?? "",
         document.getText(new vscode.Range(
           0,
@@ -119,8 +124,7 @@ export function activate(_: vscode.ExtensionContext) {
           0
         )) ?? "",
         document.fileName.split(".").pop() ?? "",
-        state.user.id,
-        NETID
+        state.netId 
       );
 
       if (state.shouldSync()) {
@@ -130,7 +134,7 @@ export function activate(_: vscode.ExtensionContext) {
       if (!completion) {
         mp.track("extension_error", {
           description: "completion was not returned from server",
-          user_id: state.user.id,
+          user_id: state.netId,
           version: EXTENSION_VERSION,
         });
         return [];
@@ -138,10 +142,10 @@ export function activate(_: vscode.ExtensionContext) {
 
       // store the completion in the logs
       state.addCompletion(completion);
-      syncCompletion(completion, state.user);
+      syncCompletion(completion, state.netId, state.id);
 
       mp.track("completion", {
-        distinct_id: state.user.id,
+        distinct_id: state.netId,
         completion: completion.completion,
         language: document.fileName.split(".").pop() || "",
         version: EXTENSION_VERSION,
@@ -176,4 +180,8 @@ export function activate(_: vscode.ExtensionContext) {
     "pincer.acceptCompletion",
     onDidAcceptCompletion
   );
+}
+
+export function deactivate() {
+  endSession(state.netId, state.id);
 }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { randomUUID } from "crypto";
 import { DocumentChange, User, Completion, UserSettings } from "shared";
 
 interface ExtensionState {
@@ -11,13 +12,18 @@ interface ExtensionState {
 }
 
 class ExtensionState implements ExtensionState {
-  user: User | undefined = undefined;
+  netId: string;
+  id: string;
   changeLog: DocumentChange[] = [];
   unsavedChanges: DocumentChange[] = [];
   saveLog: number[] = [];
   completions: Completion[] = [];
   events: number[] = [];
   settings: UserSettings | null;
+
+  constructor() {
+    this.id = randomUUID();
+  }
 
   addDocumentEvent(document: DocumentChange) {
     this.changeLog.push(document);
@@ -30,6 +36,7 @@ class ExtensionState implements ExtensionState {
       return true;
     }
 
+
     if (Date.now() - this.saveLog[this.saveLog.length - 1] > 10000) {
       return true;
     }
@@ -38,12 +45,14 @@ class ExtensionState implements ExtensionState {
   }
 
   async sync() {
+      this.saveLog.push(Date.now());
     return axios
       .post(
         `${process.env['BASE_URL']}/sync/documents`,
         {
           documents: this.unsavedChanges,
-          user: this.user,
+          netId: this.netId,
+          sessionId: this.id,
         },
       )
       .then((_) => {
@@ -82,12 +91,17 @@ class ExtensionState implements ExtensionState {
       }
     );
 
+    console.log("COMPLETION", completion);
+
     if (!completion) {
+      console.error("Completion not found");
       return;
     }
 
     completion.accepted = true;
     completion.acceptedTimestamp = Date.now();
+
+    console.log("COMPLETION", completion);
 
     return completion;
   }

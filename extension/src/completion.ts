@@ -1,12 +1,11 @@
 import axios from "axios";
 import { v4 as uuid } from "uuid";
-import { Completion, User } from "shared";
+import { Completion } from "shared";
 
 export async function getCompletion(
   input: string,
   context: string,
   fileExtension: string,
-  userId: string,
   netId: string,
 ): Promise<Completion | null> {
   const response = await axios
@@ -16,7 +15,6 @@ export async function getCompletion(
         prompt: input,
         context: context ?? "",
         fileExtension: fileExtension,
-        userId,
         netId,
       },
     )
@@ -41,14 +39,17 @@ export async function getCompletion(
 
 export async function syncCompletion(
   completion: Completion,
-  user: User
+  netId: string,
+  sessionId: string,
 ): Promise<void> {
+  console.log(completion);
   axios
     .post(`${process.env['BASE_URL']}/sync/completion`, {
       completion: completion,
-      user: user,
+      netId: netId,
+      sessionId: sessionId,
     })
     .catch((e) => {
-      console.log(e);
+      console.error(e);
     });
 }
